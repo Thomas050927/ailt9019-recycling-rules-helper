@@ -1,0 +1,160 @@
+{
+  "university": "The University of Hong Kong",
+  "verifiedOn": "2026-10-24",
+  "note": "Official HKU webpages were checked for this starter source catalogue. The catalogue is not a complete policy corpus and does not establish that every linked document is current. Verify policy versions and department-specific instructions before acting.",
+  "sources": [
+    {
+      "id": "hku-chemicals-waste",
+      "title": "Chemicals & Waste — HKU Safety Office",
+      "type": "Official webpage",
+      "url": "https://safety.hku.hk/chemicals-waste",
+      "keywords": [
+        "chemical waste",
+        "clinical waste",
+        "hazardous chemical",
+        "chemical safety",
+        "safety office",
+        "waste collection",
+        "chemical emergency"
+      ],
+      "summary": "HKU Safety Office describes its chemical safety service, including collection, storage and disposal of hazardous chemical waste, and coordination of clinical-waste collection. The page links to the Safety Manual's Chemical Waste and Clinical Waste sections.",
+      "citation": "Webpage section: Chemicals & Waste (no PDF page number).",
+      "warning": "For laboratory or hazardous waste, follow the current Safety Office procedure and departmental instructions."
+    },
+    {
+      "id": "hku-chemical-waste-pdf",
+      "title": "Chemical Waste — HKU Safety Office policy PDF (Version 3)",
+      "type": "Official PDF",
+      "url": "https://safety.hku.hk/_files/ugd/e85c58_ebf4aa3a654f49feb10a6234cfe3db90.pdf",
+      "keywords": [
+        "chemical waste",
+        "acid",
+        "alkali",
+        "organic solvent",
+        "solvent",
+        "expired chemical",
+        "surplus chemical",
+        "chemical segregation",
+        "chemical label",
+        "waste container",
+        "chemical storage",
+        "hazardous waste compatibility",
+        "chemical waste collection",
+        "sink",
+        "drain"
+      ],
+      "summary": "The PDF states that chemical waste is subject to controlled handling, collection, storage, transport and disposal. It describes segregation by waste type, separate compatible containers, labelling, storage, and Safety Office collection arrangements.",
+      "citation": "PDF pp. 1–9, including policy and general requirements.",
+      "issueDate": "December 2012",
+      "reviewDate": "December 2014",
+      "warning": "IMPORTANT: this copy states Issue Date Dec. 2012 and Review Date Dec. 2014. The review date has passed. Treat as a historical reference only; confirm current instructions with HKU Safety Office before handling or disposing of chemical waste."
+    },
+    {
+      "id": "hku-safety-manual",
+      "title": "Safety Manual — HKU Safety Office",
+      "type": "Official webpage / manual index",
+      "url": "https://safety.hku.hk/safety-manual",
+      "keywords": [
+        "safety manual",
+        "chemical waste",
+        "clinical waste",
+        "lithium-ion battery",
+        "battery safety",
+        "sharps",
+        "emergency procedures",
+        "hazardous waste",
+        "waste disposal",
+        "laboratory"
+      ],
+      "summary": "HKU's Safety Manual index lists guidance including Lithium-ion Battery Safety, Chemical Waste, HKU Labpack Waste Workflow, HKU Pharmaceutical Waste Disposal Workflow, Sharps Safety and emergency procedures.",
+      "citation": "Webpage section: Safety Manual (links to individual guidance; no single page number).",
+      "warning": "Open the relevant current document and check its version before relying on detailed instructions."
+    },
+    {
+      "id": "hku-safety-health-policy",
+      "title": "Safety and Health Policy — The University of Hong Kong",
+      "type": "Official university policy webpage",
+      "url": "https://www.hku.hk/en/about-hku/policies/safety-and-health-policy",
+      "keywords": [
+        "safety policy",
+        "health policy",
+        "safety and health",
+        "university policy",
+        "campus safety"
+      ],
+      "summary": "HKU's official policy directory links to the University's Safety and Health Policy. This is a governance-level policy source, not a detailed household recycling guide.",
+      "citation": "Official university policy webpage (no PDF page number).",
+      "warning": "Use the topic-specific Safety Office procedures for disposal instructions."
+    },
+    {
+      "id": "hku-sustainability-policy",
+      "title": "Sustainability Goals and Policy — The University of Hong Kong",
+      "type": "Official university policy webpage",
+      "url": "https://www.hku.hk/en/about-hku/policies/sustainability-goals-and-policy",
+      "keywords": [
+        "sustainability",
+        "recycling",
+        "waste reduction",
+        "environment",
+        "sustainability policy",
+        "campus waste"
+      ],
+      "summary": "HKU's official policy directory lists its Sustainability Goals and Policy. The page is a policy entry point; specific recycling-bin locations and collection rules require a relevant operational source.",
+      "citation": "Official university policy webpage (no PDF page number).",
+      "warning": "This listing alone does not confirm the correct bin or collection point for a specific item."
+    },
+    {
+      "id": "hku-forms",
+      "title": "Forms — HKU Safety Office",
+      "type": "Official webpage",
+      "url": "https://safety.hku.hk/forms",
+      "keywords": [
+        "chemical waste log sheet",
+        "labpack",
+        "pharmaceutical waste",
+        "chemical waste form",
+        "waste collection form",
+        "forms"
+      ],
+      "summary": "The Safety Office forms page lists chemical-waste log sheets, a log sheet for medical sources, pharmaceutical-waste disposal and a Labpack Waste Profile form.",
+      "citation": "Webpage section: Chemicals and Waste (no PDF page number).",
+      "warning": "Forms are process support; consult the current procedure and responsible department."
+    },
+    {
+      "id": "hku-laboratory-safety",
+      "title": "Laboratory Safety — HKU Safety Office",
+      "type": "Official webpage",
+      "url": "https://safety.hku.hk/laboratory-safety",
+      "keywords": [
+        "laboratory safety",
+        "battery",
+        "lithium-ion battery",
+        "chemical safety",
+        "hazardous materials",
+        "laboratory"
+      ],
+      "summary": "HKU Safety Office describes laboratory risk controls and links to topic-specific guidance including Lithium-ion Battery Safety and Chemical Safety in the Lab.",
+      "citation": "Webpage section: Laboratory Safety (no PDF page number).",
+      "warning": "For a specific battery incident or hazardous material, use the current specialist guidance and emergency procedures."
+    },
+    {
+      "id": "hku-contractors-sustainability",
+      "title": "Sustainability Guidance Note for Contractors and Suppliers — HKU Finance and Enterprises Office",
+      "type": "Official PDF",
+      "url": "https://www.feo.hku.hk/finance/suppliers/Sustainability_Guidance_Note_for_Contractors_and_Suppliers.pdf",
+      "keywords": [
+        "solid waste",
+        "chemical waste",
+        "reuse",
+        "recycle",
+        "contractor",
+        "supplier",
+        "sustainability",
+        "waste disposal"
+      ],
+      "summary": "The guidance note asks contractors and suppliers to minimise solid and chemical waste, handle and dispose of waste properly, and reuse and recycle wherever possible.",
+      "citation": "PDF; refer to the linked document for the complete context.",
+      "warning": "This document is directed at contractors and suppliers, not a complete student or residential recycling guide."
+    }
+  ]
+}
