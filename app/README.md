@@ -34,3 +34,20 @@ PDF text extraction and search happen in the browser. This app does not upload s
 ## Deploy as a PWA
 
 Publish the contents of this `app/` folder on a static host with HTTPS (for example, GitHub Pages, Netlify, or Cloudflare Pages). The manifest and service worker are included. Confirm the deployed URL and test installation on the target browsers before public launch.
+
+
+## HKU source catalogue
+
+The app includes `hku-sources.json`, a small starter catalogue linking to official University of Hong Kong sources, including the HKU Safety Office's Chemicals & Waste page, Safety Manual, forms, Laboratory Safety page, and university-level Safety and Health / Sustainability policy pages. Search queries match the catalogue metadata and show links to the original official sources.
+
+The catalogue is a navigational aid, not a complete policy corpus. Its summaries are not live-retrieved quotations. The listed Chemical Waste PDF identifies itself as issued in December 2012 and reviewed in December 2014, so the app flags it as historical and advises confirming current procedures with the Safety Office. Do not treat it as current without confirmation.
+
+For exact page-level search results, upload current official PDFs in the browser. Catalogue entries cite webpage sections or give document-level reference notes; only text extracted from a PDF uploaded into the app produces query-specific page-number citations. No PDF files are bundled and no source document is silently treated as current.
+
+Verified official source starting points:
+- https://safety.hku.hk/chemicals-waste
+- https://safety.hku.hk/safety-manual
+- https://safety.hku.hk/forms
+- https://safety.hku.hk/laboratory-safety
+- https://www.hku.hk/en/about-hku/policies/safety-and-health-policy
+- https://www.hku.hk/en/about-hku/policies/sustainability-goals-and-policy
