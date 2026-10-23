@@ -1,0 +1,7 @@
+interface:
+  display_name: "Recycling Rules Helper"
+  short_description: "Find campus waste disposal rules in policy PDFs"
+  default_prompt: "Find the campus policy for disposing of this item. Give concise steps, the exact collection location, and the original clause and PDF page references. If the documents do not support an answer, say so; if this is an emergency, direct me to verified campus emergency/EHS contacts."
+
+policy:
+  allow_implicit_invocation: true
