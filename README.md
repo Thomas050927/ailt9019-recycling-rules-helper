@@ -1,3 +1,5 @@
+AILT9019_group60
+
 # Recycling Rules Helper
 
 A document-grounded **agent Skill** for helping campus students, laboratory researchers, faculty, and staff find disposal instructions for non-standard waste, such as laboratory electronic waste (e-waste), batteries, and chemical containers.
