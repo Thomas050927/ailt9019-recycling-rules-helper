@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#176b4d">
+  <meta name="description" content="Search campus waste and recycling policies with page-level source citations.">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icons/recycle.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <title>Campus Waste Guide</title>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="Campus Waste Guide home"><span class="brand-mark">↻</span><span>Campus Waste Guide</span></a>
+    <button id="install-button" class="button button-outline" hidden>Install app</button>
+  </header>
+  <main class="container">
+    <section class="hero">
+      <div class="eyebrow">CAMPUS SUSTAINABILITY</div>
+      <h1>Dispose of it <span>the right way.</span></h1>
+      <p>Search official campus policy PDFs and get answers linked to the exact page they came from.</p>
+      <div class="privacy-note"><span aria-hidden="true">🔒</span> Your PDFs are processed in this browser and are not uploaded by this app.</div>
+    </section>
+    <section class="panel" aria-labelledby="documents-heading">
+      <div class="section-heading">
+        <div><div class="eyebrow">STEP 1</div><h2 id="documents-heading">Add official policy documents</h2></div>
+        <span class="step-badge">PDF</span>
+      </div>
+      <p class="muted">Choose current policies from your university's official Environmental Health &amp; Safety (EHS), facilities, or sustainability website. No university policy documents are bundled yet.</p>
+      <label id="drop-zone" class="drop-zone" for="pdf-input">
+        <span class="upload-icon" aria-hidden="true">↑</span>
+        <strong>Choose PDF files</strong>
+        <span>or drag and drop them here</span>
+        <span class="small muted">Multiple PDFs supported · processed locally</span>
+      </label>
+      <input id="pdf-input" type="file" accept="application/pdf,.pdf" multiple hidden>
+      <div id="document-status" class="status" role="status" aria-live="polite">No documents loaded.</div>
+      <ul id="document-list" class="document-list"></ul>
+    </section>
+    <section class="panel" aria-labelledby="search-heading">
+      <div class="section-heading">
+        <div><div class="eyebrow">STEP 2</div><h2 id="search-heading">Search disposal guidance</h2></div>
+        <span class="step-badge">SEARCH</span>
+      </div>
+      <form id="search-form" class="search-form">
+        <label class="sr-only" for="query">What do you need to dispose of?</label>
+        <input id="query" name="query" type="search" placeholder="e.g. lithium battery, broken laptop, chemical waste" autocomplete="off" required>
+        <button class="button" type="submit">Search policies</button>
+      </form>
+      <div class="quick-searches" aria-label="Example searches">
+        <button type="button" class="chip" data-query="battery">Batteries</button>
+        <button type="button" class="chip" data-query="electronic waste">E-waste</button>
+        <button type="button" class="chip" data-query="chemical waste">Chemical waste</button>
+        <button type="button" class="chip" data-query="bulky item">Bulky items</button>
+      </div>
+      <div id="search-status" class="status" role="status" aria-live="polite">Load official PDFs to search their text.</div>
+      <div id="results" class="results"></div>
+    </section>
+    <section class="safety-panel">
+      <span class="safety-icon" aria-hidden="true">!</span>
+      <div><h2>Safety first</h2><p>Do not mix unknown chemicals or place hazardous materials in ordinary bins. If there is a spill, exposure, fire, leaking battery, or immediate danger, move away if safe and contact your campus emergency/EHS service using the official number for your location. This tool is not an emergency service.</p></div>
+    </section>
+    <footer>
+      <p><strong>Campus Waste Guide</strong> · Early preview</p>
+      <p>Always check the document's publisher, effective date, and current campus instructions. Search results are excerpts, not a substitute for reading the full policy.</p>
+    </footer>
+  </main>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs" type="module"></script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
