@@ -11,6 +11,7 @@ const queryInput = document.querySelector("#query");
 const installButton = document.querySelector("#install-button");
 let pdfjs;
 let documents = [];
+let hkuSources = [];
 let deferredInstallPrompt = null;
 
 try {
@@ -20,7 +21,15 @@ try {
   statusEl.textContent = "PDF reader could not load. Check your internet connection and reload this page.";
   statusEl.classList.add("error");
 }
-
+try {
+  const response = await fetch("./hku-sources.json", {cache:"no-cache"});
+  if (!response.ok) throw new Error("Source catalogue could not be loaded.");
+  const catalogue = await response.json();
+  hkuSources = Array.isArray(catalogue.sources) ? catalogue.sources : [];
+  searchStatus.textContent = "HKU official-source catalogue loaded (" + hkuSources.length + " sources). Add PDFs for exact page-level text matches.";
+} catch (error) {
+  searchStatus.textContent = "HKU source catalogue could not load. You can still search PDFs you add.";
+}
 function safeText(value) {
   return String(value ?? "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
 }
@@ -79,8 +88,8 @@ async function loadFiles(files) {
   }
   renderDocuments();
   if (documents.length) {
-    statusEl.textContent = documents.length + " document(s) indexed. Search is ready.";
-    searchStatus.textContent = "Searches use text extracted from your loaded PDFs. Citations point to the source file and PDF page.";
+    statusEl.textContent = documents.length + " document(s) indexed in this browser.";
+    searchStatus.textContent = "Search checks the loaded PDF text and the HKU official-source catalogue. PDF results cite the exact page; catalogue results link to the official source.";
     searchStatus.classList.remove("error");
   }
 }
@@ -90,14 +99,73 @@ dropZone.addEventListener("drop", async event => {
   event.preventDefault();dropZone.classList.remove("dragging");
   await loadFiles([...event.dataTransfer.files]);
 });
+function findOfficialSources(terms) {
+  return hkuSources.map(source => {
+    const searchable = [source.title, source.type, source.summary, ...(source.keywords || [])].join(" ").toLowerCase();
+    const count = terms.reduce((total, term) => total + (searchable.includes(term) ? 1 : 0), 0);
+    return {...source, score:count};
+  }).filter(source => source.score > 0).sort((a,b) => b.score - a.score);
+}
+function renderOfficialSource(source) {
+  const article = document.createElement("article");
+  article.className = "result-card official-source";
+  const label = document.createElement("div");
+  label.className = "source-label";
+  label.textContent = "HKU OFFICIAL SOURCE · " + source.type;
+  const title = document.createElement("h3");
+  title.className = "result-title";
+  title.textContent = source.title;
+  const summary = document.createElement("p");
+  summary.className = "result-snippet";
+  summary.textContent = source.summary;
+  const citation = document.createElement("div");
+  citation.className = "citation";
+  const cite = document.createElement("span");
+  cite.textContent = "Reference: " + source.citation;
+  const link = document.createElement("a");
+  link.href = source.url;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  link.textContent = "Open official source ↗";
+  citation.append(cite, link);
+  article.append(label, title, summary, citation);
+  if (source.issueDate || source.reviewDate) {
+    const date = document.createElement("p");
+    date.className = "source-warning";
+    date.textContent = "Document dates: issue " + (source.issueDate || "not listed") + "; review " + (source.reviewDate || "not listed") + ". Verify current status before relying on it.";
+    article.append(date);
+  }
+  if (source.warning) {
+    const warning = document.createElement("p");
+    warning.className = "source-warning";
+    warning.textContent = source.warning;
+    article.append(warning);
+  }
+  return article;
+}
+function renderPdfMatch(match) {
+  const article = document.createElement("article");
+  article.className = "result-card";
+  const title = document.createElement("h3");
+  title.className = "result-title";
+  title.textContent = match.doc.name;
+  const snippet = document.createElement("p");
+  snippet.className = "result-snippet";
+  snippet.textContent = match.snippet || "This page matched the query but no selectable text could be extracted.";
+  const citation = document.createElement("div");
+  citation.className = "citation";
+  const source = document.createElement("span");
+  source.textContent = "Uploaded PDF: " + match.doc.name + " · PDF page " + match.page.pageNo;
+  const relevance = document.createElement("span");
+  relevance.textContent = match.count + " keyword match(es)";
+  citation.append(source, relevance);
+  article.append(title, snippet, citation);
+  return article;
+}
 function runSearch(rawQuery) {
   const query = rawQuery.trim().toLowerCase();
   resultsEl.replaceChildren();
   if (!query) return;
-  if (!documents.length) {
-    searchStatus.textContent = "Please add official campus policy PDFs before searching. No policy corpus is bundled with this app.";
-    return;
-  }
   const terms = [...new Set(query.split(/\s+/).filter(term => term.length > 1))];
   const matches = [];
   for (const doc of documents) {
@@ -109,27 +177,30 @@ function runSearch(rawQuery) {
   }
   matches.sort((a,b) => b.count - a.count);
   const shown = matches.slice(0, 30);
-  searchStatus.textContent = matches.length ? "Found " + matches.length + " matching page(s); showing the top " + shown.length + ". Results are keyword matches, not AI-verified advice." : "No matching text found. Try another term or check whether the PDF contains selectable text.";
-  if (!matches.length) return;
-  for (const match of shown) {
-    const article = document.createElement("article");
-    article.className = "result-card";
-    const title = document.createElement("h3");
-    title.className = "result-title";
-    title.textContent = match.doc.name;
-    const snippet = document.createElement("p");
-    snippet.className = "result-snippet";
-    snippet.textContent = match.snippet || "This page matched the query but no selectable text could be extracted.";
-    const citation = document.createElement("div");
-    citation.className = "citation";
-    const source = document.createElement("span");
-    source.textContent = "Source: " + match.doc.name + " · PDF page " + match.page.pageNo;
-    const relevance = document.createElement("span");
-    relevance.textContent = match.count + " keyword match(es)";
-    citation.append(source, relevance);
-    article.append(title, snippet, citation);
-    resultsEl.append(article);
+  const official = findOfficialSources(terms).slice(0, 15);
+  const heading = document.createElement("h3");
+  heading.className = "results-heading";
+  heading.textContent = "Official HKU sources (" + official.length + ")";
+  resultsEl.append(heading);
+  if (official.length) official.forEach(source => resultsEl.append(renderOfficialSource(source)));
+  else {
+    const none = document.createElement("p");
+    none.className = "muted";
+    none.textContent = "No matching source in the starter catalogue. Try another keyword or check the HKU Safety Office website directly.";
+    resultsEl.append(none);
   }
+  const pdfHeading = document.createElement("h3");
+  pdfHeading.className = "results-heading";
+  pdfHeading.textContent = "Matches in your uploaded PDFs (" + matches.length + ")";
+  resultsEl.append(pdfHeading);
+  if (shown.length) shown.forEach(match => resultsEl.append(renderPdfMatch(match)));
+  else {
+    const none = document.createElement("p");
+    none.className = "muted";
+    none.textContent = documents.length ? "No matching selectable text found in loaded PDFs." : "For exact page-level text citations, add current official HKU PDFs above. The source catalogue links to official pages but does not replace the documents.";
+    resultsEl.append(none);
+  }
+  searchStatus.textContent = "Matched " + official.length + " official catalogue source(s) and " + matches.length + " uploaded PDF page(s). Catalogue summaries are navigation aids; verify instructions in the full official source.";
 }
 searchForm.addEventListener("submit", event => {
   event.preventDefault();
