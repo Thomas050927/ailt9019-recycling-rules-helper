@@ -300,6 +300,10 @@ function resolveEndpoint() {
 function syncCustomField() {
   if (endpointCustomField) endpointCustomField.hidden = endpointEl.value !== "__custom";
   endpointNote.textContent = ENDPOINT_NOTES[endpointEl.value] || "";
+  if (EMBEDDED_DEFAULTS.endpoint && resolveEndpoint() === EMBEDDED_DEFAULTS.endpoint) {
+    endpointNote.textContent =
+      "This copy came with the key and relay already set up. You can ignore this whole panel — just close it and ask questions.";
+  }
 }
 
 function readConfig() {
@@ -318,7 +322,14 @@ function persistConfig() {
   }
   const { apiKey, model, endpoint } = readConfig();
   const viaProxy = isLocalProxy(endpoint);
-  configState.textContent = apiKey ? `ready · ${model}` : viaProxy ? `proxy · ${model}` : "no key";
+  const baked = Boolean(EMBEDDED_DEFAULTS.apiKey) && apiKey === EMBEDDED_DEFAULTS.apiKey;
+  configState.textContent = baked
+    ? "ready — nothing to set up"
+    : apiKey
+      ? `ready · ${model}`
+      : viaProxy
+        ? `proxy · ${model}`
+        : "no key";
   configState.classList.toggle("config-ready", Boolean(apiKey) || viaProxy);
 }
 
