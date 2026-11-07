@@ -1,26 +1,21 @@
 # Testing the AI tool on your own laptop
 
-This is for the four people in Group 60. It takes about three minutes.
-You do **not** need to install anything except Python. No `pip install`.
+For Group 60. About two minutes. No terminal needed, no `pip install`.
+You only need Python.
 
 ---
 
-## Step 1 — Get the code
+## Step 1 — Download the code
 
 The AI work lives on a branch called `feat/ai-answer-layer`, not on `main`.
-Download that branch as a zip (no Git needed):
+Download that branch as a zip — no Git, no GitHub account:
 
 **https://github.com/Thomas050927/ailt9019-recycling-rules-helper/archive/refs/heads/feat/ai-answer-layer.zip**
 
-Unzip it somewhere simple, like your Desktop.
+Unzip it onto your Desktop. You get a folder named something like
+`ailt9019-recycling-rules-helper-feat-ai-answer-layer`.
 
-If you prefer Git:
-
-```
-git clone https://github.com/Thomas050927/ailt9019-recycling-rules-helper.git
-cd ailt9019-recycling-rules-helper
-git switch feat/ai-answer-layer
-```
+Everything below happens **inside that folder**.
 
 ---
 
@@ -28,102 +23,66 @@ git switch feat/ai-answer-layer
 
 Go to **https://www.python.org/downloads/** and install it.
 
-On Windows, **tick the box that says "Add python.exe to PATH"** during setup.
-That one checkbox is the cause of almost every failure below.
-
-Check it worked — open a terminal and type:
-
-```
-python --version
-```
-
-You should see something like `Python 3.12.4`. On a Mac use `python3 --version`.
+On Windows, **tick "Add python.exe to PATH"** on the first setup screen.
+That one checkbox causes almost every problem people hit.
 
 ---
 
-## Step 3 — Add the key
+## Step 3 — Double-click `start.py`
 
-The key is shared by the whole group. **Do not post it anywhere public** —
-not GitHub, not a public Discord, not a screenshot.
+Inside the folder there is a file called **`start.py`**.
 
-In the folder you unzipped, create a new file named exactly:
+**Windows:** double-click it.
+If Windows asks what to open it with, choose **Python**.
 
-```
-.env
-```
+**Mac:** right-click `start.py` → **Open With** → **Python Launcher**.
 
-Put one line inside it:
+A black window opens and asks for the key:
 
 ```
-BAILIAN_API_KEY=sk-sp-...the-rest-of-the-key
+One-time setup: this tool needs the group API key.
+Paste it below and press Enter. Right-click in this window to paste.
+
+API key:
 ```
 
-No quotes, no spaces around the `=`. Save it.
+Paste the group key and press Enter. Right-clicking pastes in that window —
+`Ctrl+V` often does nothing there.
 
-`.env` is already excluded from Git, so it can never be uploaded by accident.
+It writes the key to a local file called `.env` in that same folder, which is
+excluded from Git and never uploaded. **You only do this once.**
+
+Then it prints:
+
+```
+====================================================
+  Campus Waste Guide
+====================================================
+  Address: http://127.0.0.1:8787
+  Keep this window open. Press Ctrl+C to stop.
+====================================================
+```
+
+Your browser should open by itself. If it doesn't, open
+**http://127.0.0.1:8787** manually.
 
 ---
 
-## Step 4 — Start it
+## Step 4 — Ask it something
 
-**Windows:**
+Leave the **Model settings** panel alone. It already points at the local
+server, which holds the key. Never paste the key into the web page.
 
-1. Open the unzipped folder in File Explorer
-2. Click the address bar at the top, type `cmd`, press Enter — a black window opens in that folder
-3. Type this and press Enter:
+Try these four:
 
-```
-python tools\proxy.py
-```
-
-Windows 11 users can also right-click the folder and choose **Open in Terminal**.
-
-**Mac / Linux:** open Terminal in that folder and run either:
-
-```
-bash run.sh
-```
-
-or
-
-```
-python3 tools/proxy.py
-```
-
-You should see:
-
-```
-key: loaded
-serving http://127.0.0.1:8787
-```
-
-If it says `key: MISSING`, the `.env` file is wrong — usually it is named
-`.env.txt`, or it sits in the wrong folder. It must be in the top folder,
-the one that also contains `tools` and `app`.
-
----
-
-## Step 5 — Use it
-
-Open **http://127.0.0.1:8787** in your browser.
-
-Type a question, press **Ask**.
-
-Leave the Model settings panel alone. It already points at the local server
-that is supplying the key. You never type the key into the page.
-
----
-
-## Four questions to try
-
-| Ask this | Expected result |
+| Ask this | What should happen |
 |---|---|
-| `How should chemical waste be segregated?` | Green answer card, numbered steps, each with a chip like `§ 1.2.1 · p.3`, plus a line naming the policy version and dates |
+| `How should chemical waste be segregated?` | Green card, numbered steps, each with a chip like `§ 1.2.1 · p.3`, plus a line naming the policy version and dates |
 | `Where do I put an empty chemical container?` | Shorter answer, still cited |
-| `A chemical bottle is leaking in my lab` | **Red** card. "Stop. Do not handle or move it." Phone **3917 2882**. No steps. |
+| `A chemical bottle is leaking in my lab` | **Red** card: "Stop. Do not handle or move it." Phone **3917 2882**. No steps. |
 | `What are the city rules for recycling a television at home` | **Amber** card refusing, because the campus documents do not cover it |
 
-The last two are the ones being graded at 100%. Try to break them.
+The last two are graded at 100%. Try to break them.
 
 ---
 
@@ -131,20 +90,23 @@ The last two are the ones being graded at 100%. Try to break them.
 
 | Symptom | Fix |
 |---|---|
-| `python` is not recognised | Python is not on PATH. Reinstall and tick "Add python.exe to PATH", or try `py tools\proxy.py` on Windows |
-| `Address already in use` | Something else is on port 8787. Run `python tools/proxy.py --port 8788` and open `http://127.0.0.1:8788` instead |
-| Page loads, answers never come | The server window must stay open. Closing it stops everything. |
-| Answer says "did not reach the model" | The server is not running, or you are on the deployed GitHub Pages site instead of `127.0.0.1:8787` |
+| Double-clicking opens a text editor instead of running it | Right-click `start.py` → **Open with** → **Python**. If Python isn't listed, Python isn't installed properly — repeat Step 2 and tick the PATH box |
+| `python is not recognized` in the black window | Same cause. Reinstall Python with "Add python.exe to PATH" ticked |
+| Window opens and closes instantly | Python is missing. Nothing ran. Install it, then try again |
+| Browser doesn't open | Open `http://127.0.0.1:8787` yourself |
+| Answers never appear | The black window must stay open. Closing it stops everything |
 | Page looks old or unstyled | Press **Ctrl + Shift + R** |
-| Windows firewall popup | Click **Allow**. It only needs local access, nothing leaves your machine except the model call. |
+| "Address already in use" | You already have it open in another window. Close that one, or just use the browser tab you already have |
+| Windows firewall popup | **Allow**. It only listens on your own machine |
+| It says the key was rejected | The key was mistyped when pasted. Delete the `.env` file and double-click `start.py` again |
 
 ---
 
-## What you are testing, and what is still missing
+## What works, and what is still missing
 
-Working: clause-level retrieval, citation checking, both safety gates, the
-model answers with real citations.
+Working: clause-level retrieval, citation checking, both safety gates, real
+model answers with real clause numbers.
 
-Not finished: the rulebook holds **one** document (HKU Chemical Waste v3,
-2012). So battery, laptop and general recycling questions are refused —
-that is correct behaviour for the current corpus, not a bug.
+Missing: the rulebook holds **one** document (HKU Chemical Waste v3, 2012).
+So battery, laptop and general recycling questions are refused — that is
+correct behaviour for the current corpus, not a bug.
