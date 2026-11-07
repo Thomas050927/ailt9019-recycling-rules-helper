@@ -1,0 +1,6 @@
+# Keep shell scripts LF-only so they run on macOS and Linux after a clone.
+*.sh text eol=lf
+run.sh text eol=lf
+# Markdown and JSON are fine with either ending; let Git normalise to LF.
+*.md text eol=lf
+*.json text eol=lf
