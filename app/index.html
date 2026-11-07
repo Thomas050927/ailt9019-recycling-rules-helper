@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#176b4d">
-  <meta name="description" content="Search campus waste and recycling policies with page-level source citations.">
+  <meta name="description" content="Ask what to do with a waste item and get answers cited to the exact clause and page of campus policy.">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icons/recycle.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./styles.css">
@@ -19,31 +19,16 @@
     <section class="hero">
       <div class="eyebrow">CAMPUS SUSTAINABILITY</div>
       <h1>Dispose of it <span>the right way.</span></h1>
-      <p>Search official campus policy PDFs and get answers linked to the exact page they came from.</p>
-      <div class="privacy-note"><span aria-hidden="true">🔒</span> Your PDFs are processed in this browser and are not uploaded by this app.</div>
+      <p>Ask a question about a waste item. Every answer is built from campus policy and cites the exact clause and page it came from.</p>
+      <div class="privacy-note"><span aria-hidden="true">🔒</span> Documents you add are read in this browser and are never uploaded.</div>
     </section>
-    <section class="panel" aria-labelledby="documents-heading">
-      <div class="section-heading">
-        <div><div class="eyebrow">STEP 1</div><h2 id="documents-heading">Add official policy documents</h2></div>
-        <span class="step-badge">PDF</span>
-      </div>
-      <p class="muted">The fixed corpus below ships with the app as a pre-built clause index (<code>app/corpus/index.json</code>). To add documents, list them in <code>tools/corpus.json</code> and run <code>python tools/build_index.py</code>. You can still drop extra PDFs here for keyword-level evidence search.</p>
-      <label id="drop-zone" class="drop-zone" for="pdf-input">
-        <span class="upload-icon" aria-hidden="true">↑</span>
-        <strong>Choose PDF files</strong>
-        <span>or drag and drop them here</span>
-        <span class="small muted">Multiple PDFs supported · processed locally</span>
-      </label>
-      <input id="pdf-input" type="file" accept="application/pdf,.pdf" multiple hidden>
-      <div id="document-status" class="status" role="status" aria-live="polite">No documents loaded.</div>
-      <ul id="document-list" class="document-list"></ul>
-    </section>
+
     <section class="panel" aria-labelledby="ask-heading">
       <div class="section-heading">
-        <div><div class="eyebrow">STEP 2</div><h2 id="ask-heading">Ask about a waste item</h2></div>
+        <div><div class="eyebrow">STEP 1</div><h2 id="ask-heading">Ask about a waste item</h2></div>
         <span class="step-badge">AI</span>
       </div>
-      <p class="muted">Answers are generated only from the indexed campus policy clauses below, and every step carries the clause and page it came from.</p>
+      <p class="muted">Answers come only from the indexed policy clauses. If the clauses don't settle the question, the tool says so instead of guessing.</p>
       <form id="ask-form" class="search-form">
         <label class="sr-only" for="ask-query">What do you need to dispose of?</label>
         <input id="ask-query" name="ask-query" type="search" placeholder="e.g. spent chemicals, empty chemical container, acid waste" autocomplete="off" required>
@@ -90,38 +75,44 @@
         <p class="config-note" id="endpoint-note"></p>
       </details>
 
-      <div id="ask-status" class="status" role="status" aria-live="polite">Load the corpus, then add a key to enable answers.</div>
+      <div id="ask-status" class="status" role="status" aria-live="polite">Loading the corpus…</div>
       <div id="answer" class="answer"></div>
     </section>
-    <section class="panel" aria-labelledby="search-heading">
+
+    <section class="panel" aria-labelledby="documents-heading">
       <div class="section-heading">
-        <div><div class="eyebrow">SOURCES</div><h2 id="search-heading">Inspect the source passages</h2></div>
-        <span class="step-badge">SEARCH</span>
+        <div><div class="eyebrow">OPTIONAL</div><h2 id="documents-heading">Add your own policy documents</h2></div>
+        <span class="step-badge">PDF</span>
       </div>
-      <form id="search-form" class="search-form">
-        <label class="sr-only" for="query">What do you need to dispose of?</label>
-        <input id="query" name="query" type="search" placeholder="e.g. lithium battery, broken laptop, chemical waste" autocomplete="off" required>
-        <button class="button" type="submit">Search policies</button>
-      </form>
-      <div class="quick-searches" aria-label="Example searches">
-        <button type="button" class="chip" data-query="battery">Batteries</button>
-        <button type="button" class="chip" data-query="electronic waste">E-waste</button>
-        <button type="button" class="chip" data-query="chemical waste">Chemical waste</button>
-        <button type="button" class="chip" data-query="bulky item">Bulky items</button>
-      </div>
-      <div id="search-status" class="status" role="status" aria-live="polite">HKU official source catalogue is available; add PDFs for exact page-level text citations.</div>
-      <div id="results" class="results"></div>
+      <p class="muted">The fixed corpus ships with the app as a pre-built clause index (<code>app/corpus/index.json</code>). To change it permanently, list the document in <code>tools/corpus.json</code> and run <code>python tools/build_index.py</code>. Extra PDFs dropped here are split into page-level passages in this tab and become citable by the Ask panel above.</p>
+      <label id="drop-zone" class="drop-zone" for="pdf-input">
+        <span class="upload-icon" aria-hidden="true">↑</span>
+        <strong>Choose PDF files</strong>
+        <span>or drag and drop them here</span>
+        <span class="small muted">Multiple PDFs supported · read locally, never uploaded</span>
+      </label>
+      <input id="pdf-input" type="file" accept="application/pdf,.pdf" multiple hidden>
+      <div id="document-status" class="status" role="status" aria-live="polite">Loading…</div>
+      <ul id="document-list" class="document-list"></ul>
     </section>
+
+    <section class="panel" aria-labelledby="links-heading">
+      <details class="reference-block">
+        <summary id="links-heading">Official HKU pages to check yourself</summary>
+        <p class="muted">Links only. These pages are not part of the indexed corpus, so the Ask panel will not cite them.</p>
+        <ul id="official-links" class="document-list"></ul>
+      </details>
+    </section>
+
     <section class="safety-panel">
       <span class="safety-icon" aria-hidden="true">!</span>
       <div><h2>Safety first</h2><p>Do not mix unknown chemicals or place hazardous materials in ordinary bins. For a laboratory emergency at HKU, the official Safety Office website lists <strong>3917 2882</strong> (24/7 help desk). For chemical-waste procedures, consult the <a href="https://safety.hku.hk/chemicals-waste" target="_blank" rel="noopener noreferrer">HKU Safety Office Chemicals &amp; Waste page</a> or contact the Chemical Safety Manager at <a href="mailto:chemical@hku.hk">chemical@hku.hk</a>. If there is a spill, exposure, fire, leaking battery, or immediate danger, move away if safe and follow official emergency instructions. This tool is not an emergency service.</p></div>
     </section>
     <footer>
       <p><strong>Campus Waste Guide</strong> · Early preview</p>
-      <p>Always check the document's publisher, effective date, and current campus instructions. Search results are excerpts, not a substitute for reading the full policy.</p>
+      <p>Always check the document's publisher, effective date, and current campus instructions. Answers are excerpts, not a substitute for reading the full policy.</p>
     </footer>
   </main>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs" type="module"></script>
   <script type="module" src="./app.js"></script>
 </body>
 </html>

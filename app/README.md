@@ -4,13 +4,15 @@ An installable web app that answers campus waste-disposal questions from a fixed
 
 ## Files
 
-- `index.html`, `styles.css`, `app.js` — UI, PDF upload, evidence search, wiring
+- `index.html`, `styles.css`, `app.js` — UI, optional PDF upload, single ask entry point, wiring
 - `retrieve.js` — BM25 retrieval over the clause index
 - `ai.js` — safety gates, prompt, model call (OpenAI-compatible), citation validation
 - `render.js` — answer card rendering (all model output goes through `textContent`)
 - `corpus/index.json` — the frozen clause index built from the corpus
 - `contacts.json` — verified campus emergency contacts only
 - `sw.js` — offline shell, stale-while-revalidate
+
+Every question goes through one function, `ask()`. There is no second search box, so the emergency and refusal gates cannot be bypassed by finding another input.
 
 ## Run locally
 

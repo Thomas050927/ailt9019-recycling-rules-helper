@@ -64,7 +64,7 @@ Deep-linkable questions for manual checks: `/?q=A%20chemical%20bottle%20is%20lea
 - **Corpus is one document** (HKU *Chemical Waste v3*, 2012, review date passed — flagged in the UI). Battery and e-waste questions currently refuse, because the corpus genuinely has nothing on them. Adding documents is a manifest entry plus `python tools/build_index.py`.
 - Appendix tables extract imperfectly; pages with figures only (12, 16–18, 24, 26) have no chunks.
 - Clause detection is heuristic (numbered lines must read like headings/sentences, not table rows). It is tuned for this document family and may need adjustment for new ones.
-- Uploaded PDFs feed keyword evidence search only; AI answers come from the built index.
+- Uploaded PDFs are split into page-level passages and become citable, but a PDF gives no clause numbers — their citations read `§ p.7`, not `§ 1.2.1`.
 
 ## Repository layout
 

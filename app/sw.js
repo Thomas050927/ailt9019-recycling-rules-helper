@@ -1,4 +1,4 @@
-const CACHE_NAME = "campus-waste-guide-v2";
+const CACHE_NAME = "campus-waste-guide-v3";
 const APP_SHELL = [
   "./",
   "./index.html",
