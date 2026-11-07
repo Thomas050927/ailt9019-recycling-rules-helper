@@ -30,12 +30,18 @@ jobs:
         uses: actions/configure-pages@v5
       - name: Validate application files
         run: |
-          node --input-type=module --check < app/app.js
+          for f in app/app.js app/ai.js app/render.js app/retrieve.js app/sw.js; do
+            node --input-type=module --check < "$f"
+          done
           python -m json.tool app/manifest.webmanifest > /dev/null
           python -m json.tool app/hku-sources.json > /dev/null
+          python -m json.tool app/contacts.json > /dev/null
+          python -m json.tool app/corpus/index.json > /dev/null
           test -s app/index.html
           test -s app/styles.css
           test -s app/sw.js
+      - name: Run headless pipeline tests
+        run: node tests/run_tests.mjs
       - name: Upload app as Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:

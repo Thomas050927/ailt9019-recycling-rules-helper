@@ -1,0 +1,20 @@
+# --- secrets: never commit ---
+.env
+.env.*
+!.env.example
+*.key
+
+# --- corpus: PDFs stay local, the built index is committed ---
+corpus/source/*.pdf
+
+# --- python ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# --- os / editor ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

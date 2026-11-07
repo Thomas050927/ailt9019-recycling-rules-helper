@@ -27,7 +27,7 @@
         <div><div class="eyebrow">STEP 1</div><h2 id="documents-heading">Add official policy documents</h2></div>
         <span class="step-badge">PDF</span>
       </div>
-      <p class="muted">Choose current policies from your university's official Environmental Health &amp; Safety (EHS), facilities, or sustainability website. No university policy documents are bundled yet.</p>
+      <p class="muted">The fixed corpus below ships with the app as a pre-built clause index (<code>app/corpus/index.json</code>). To add documents, list them in <code>tools/corpus.json</code> and run <code>python tools/build_index.py</code>. You can still drop extra PDFs here for keyword-level evidence search.</p>
       <label id="drop-zone" class="drop-zone" for="pdf-input">
         <span class="upload-icon" aria-hidden="true">↑</span>
         <strong>Choose PDF files</strong>
@@ -38,9 +38,64 @@
       <div id="document-status" class="status" role="status" aria-live="polite">No documents loaded.</div>
       <ul id="document-list" class="document-list"></ul>
     </section>
+    <section class="panel" aria-labelledby="ask-heading">
+      <div class="section-heading">
+        <div><div class="eyebrow">STEP 2</div><h2 id="ask-heading">Ask about a waste item</h2></div>
+        <span class="step-badge">AI</span>
+      </div>
+      <p class="muted">Answers are generated only from the indexed campus policy clauses below, and every step carries the clause and page it came from.</p>
+      <form id="ask-form" class="search-form">
+        <label class="sr-only" for="ask-query">What do you need to dispose of?</label>
+        <input id="ask-query" name="ask-query" type="search" placeholder="e.g. spent chemicals, empty chemical container, acid waste" autocomplete="off" required>
+        <button class="button" type="submit" id="ask-button">Ask</button>
+      </form>
+      <div class="quick-searches" aria-label="Example questions">
+        <button type="button" class="chip" data-ask="How do I dispose of spent chemical mixtures?">Spent chemicals</button>
+        <button type="button" class="chip" data-ask="How should chemical waste be segregated?">Segregation</button>
+        <button type="button" class="chip" data-ask="How do I label and package a chemical waste container?">Labels</button>
+        <button type="button" class="chip" data-ask="A chemical bottle is leaking in my lab">Leaking bottle</button>
+      </div>
+
+      <details class="model-config" id="model-config">
+        <summary>Model settings <span class="config-state" id="config-state">not configured</span></summary>
+        <div class="config-grid">
+          <label class="field">
+            <span>Endpoint</span>
+            <select id="endpoint">
+              <option value="https://dashscope.aliyuncs.com/compatible-mode/v1">Aliyun DashScope (browser-direct)</option>
+              <option value="https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1">Bailian Token Plan (needs local proxy)</option>
+              <option value="http://127.0.0.1:8787/v1">Local proxy — python tools/proxy.py</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Model</span>
+            <input id="model" list="model-options" placeholder="qwen3.8-flash" autocomplete="off">
+            <datalist id="model-options">
+              <option value="qwen3.8-flash"></option>
+              <option value="qwen3.7-plus"></option>
+              <option value="qwen3.8-max"></option>
+              <option value="deepseek-v4.1-flash"></option>
+              <option value="deepseek-v4-pro"></option>
+            </datalist>
+          </label>
+          <label class="field field-wide">
+            <span>API key</span>
+            <input id="api-key" type="password" placeholder="sk-..." autocomplete="off" spellcheck="false">
+          </label>
+        </div>
+        <p class="config-note">
+          The key stays in this browser tab only — it is never written to the page, to a file, or to the repository.
+          Do not commit a key: this repository is public and the course key is shared by the whole group.
+        </p>
+        <p class="config-note" id="endpoint-note"></p>
+      </details>
+
+      <div id="ask-status" class="status" role="status" aria-live="polite">Load the corpus, then add a key to enable answers.</div>
+      <div id="answer" class="answer"></div>
+    </section>
     <section class="panel" aria-labelledby="search-heading">
       <div class="section-heading">
-        <div><div class="eyebrow">STEP 2</div><h2 id="search-heading">Search disposal guidance</h2></div>
+        <div><div class="eyebrow">SOURCES</div><h2 id="search-heading">Inspect the source passages</h2></div>
         <span class="step-badge">SEARCH</span>
       </div>
       <form id="search-form" class="search-form">
