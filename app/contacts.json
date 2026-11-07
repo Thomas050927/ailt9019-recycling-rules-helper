@@ -1,0 +1,21 @@
+{
+  "university": "The University of Hong Kong",
+  "verifiedOn": "2026-10-24",
+  "source": "https://safety.hku.hk/chemicals-waste",
+  "note": "Only contact details published on the official HKU Safety Office site are listed here. Do not add numbers from memory: the app shows these verbatim during an emergency, so a wrong number is worse than no number.",
+  "contacts": [
+    {
+      "id": "safety-helpdesk",
+      "label": "HKU Safety Office help desk (24/7)",
+      "phone": "3917 2882",
+      "sourceUrl": "https://safety.hku.hk/chemicals-waste"
+    },
+    {
+      "id": "chemical-safety",
+      "label": "HKU Chemical Safety Manager",
+      "email": "chemical@hku.hk",
+      "sourceUrl": "https://safety.hku.hk/chemicals-waste"
+    }
+  ],
+  "generalEmergency": "If there is immediate danger to life, call 999 (Hong Kong emergency services) first."
+}

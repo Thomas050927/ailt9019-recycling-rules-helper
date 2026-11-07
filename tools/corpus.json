@@ -1,0 +1,19 @@
+{
+  "note": "Fixed corpus manifest. PDFs are downloaded by tools/fetch_corpus.py and are NOT committed (see .gitignore). The built chunk index app/corpus/index.json IS committed, so the app works offline and the corpus stays frozen for grading.",
+  "documents": [
+    {
+      "id": "chemwaste-v3",
+      "title": "Chemical Waste (Version 3)",
+      "shortTitle": "Chemical Waste v3",
+      "publisher": "HKU Safety Office",
+      "approvedBy": "Safety, Health & Environment Committee",
+      "version": "3",
+      "issueDate": "2012-12",
+      "reviewDate": "2014-12",
+      "sourceUrl": "https://safety.hku.hk/_files/ugd/e85c58_ebf4aa3a654f49feb10a6234cfe3db90.pdf",
+      "landingPage": "https://safety.hku.hk/chemicals-waste",
+      "file": "corpus/source/chemical-waste-v3.pdf",
+      "staleWarning": "Issue date Dec 2012, review date Dec 2014. The review date has passed — treat as historical and confirm current procedure with the HKU Safety Office."
+    }
+  ]
+}

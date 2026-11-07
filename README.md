@@ -8,123 +8,70 @@ WIJAYA,Eveline
 
 # Recycling Rules Helper
 
-A document-grounded **agent Skill** for helping campus students, laboratory researchers, faculty, and staff find disposal instructions for non-standard waste, such as laboratory electronic waste (e-waste), batteries, and chemical containers.
+A document-grounded Q&A assistant for campus waste disposal. Ask a natural-language question ("how do I dispose of spent chemicals?") and get a short, step-by-step protocol where **every step cites the exact policy clause and PDF page** it came from — or a refusal when the fixed corpus does not support an answer.
 
-## 1. Problem this project solves
+Not an emergency dispatcher, not a collection scheduler, not a regulatory interpreter. Active hazards trigger a safety gate that shows verified campus contacts and gives no disposal steps.
 
-Campus disposal requirements can be spread across lengthy Environmental, Health and Safety (EHS) and sustainability policy PDFs. People may spend time searching these documents for the correct handling steps, packaging requirements, collection point, and relevant policy clause.
+## How it works
 
-The Recycling Rules Helper defines a consistent workflow for answering natural-language questions using a **fixed, approved corpus of campus policy documents**. It aims to return concise instructions with the source policy title, clause, and PDF page so the user can verify the answer.
+```
+tools/corpus.json          the fixed corpus manifest (document, version, official URL)
+      │  python tools/fetch_corpus.py     downloads the PDFs (gitignored)
+      │  python tools/build_index.py      PDF → hierarchical clause chunks
+      ▼
+app/corpus/index.json      frozen chunk index, committed (85 clauses from the
+                           HKU Chemical Waste policy, each with § number + page)
+      │
+      ▼  browser
+app/retrieve.js            BM25 ranking over clauses + synonym expansion
+app/ai.js                  safety gates → refusal or model call → citation validation
+app/render.js              answer card with § x.y.z · p.N chips and source excerpts
+```
 
-### Scope and limitations
+Design decisions that matter for the evaluation:
 
-- The Skill provides instructions for a compatible AI agent; this repository does **not** contain a standalone web app, command-line program, PDF indexing engine, or database implementation.
-- No university policy corpus is bundled with this project. Actual disposal locations and procedures cannot be verified until the institution's approved policy PDFs (and any official contact data needed) are supplied to the agent.
-- The Skill is not an emergency dispatcher, physical collection scheduler, legal/regulatory interpreter, or authority that approves disposal methods.
-- It must not invent procedures, collection locations, clause/page references, policy dates, URLs, or emergency telephone numbers.
+- **Chunking is hierarchical, not page-level.** Each chunk carries `document → section → clause` and its page range, so a citation is `Chemical Waste v3, § 1.2.1, PDF p.3` — exactly what the proposal requires. Page furniture (headers, footers, tables of contents) is stripped during indexing.
+- **Citations cannot be fabricated.** The model receives context passages labelled `C1…Cn` and may only reference those IDs. Every returned ID is checked against the retrieved set; invented ones are dropped, and an "answer" with zero surviving citations is downgraded to *not found*.
+- **The two 100% requirements are deterministic.** Emergency interception and out-of-scope refusal are decided by a lexicon *before* the model is called, so they cannot be flipped by a bad model day. Emergency answers need no API key.
+- **The corpus is frozen, not live-fetched.** The committed index is the snapshot; each answer shows the document's issue/review dates, and stale documents carry a visible warning.
 
-## 2. Main functions
+## Run it
 
-The workflow described in `skills/recycling-rules-helper/SKILL.md` covers:
+**Local, full AI** (recommended for the group key):
 
-1. **Understand the request** — identify the waste item and relevant condition (for example, intact versus damaged or leaking).
-2. **Retrieve policy evidence** — search the supplied campus EHS and sustainability corpus, prioritizing specific, current policies and preserving section/clause context.
-3. **Provide source-grounded steps** — summarize only what the retrieved policy supports, including preparation, segregation, packaging, labeling, transfer, or approval steps when specified.
-4. **Identify the collection point** — state the exact location and any documented access conditions when the source provides them; otherwise say it is not specified in the retrieved documents.
-5. **Cite and report currency** — give the policy title, clause, PDF page, short source excerpt, and version/date or official URL when available. Disclose when currency or page mapping cannot be verified.
-6. **Handle missing or conflicting evidence safely** — do not guess. State when the available documents do not establish the answer and refer the user to campus EHS/sustainability. Disclose conflicting policy versions rather than silently choosing one.
-7. **Apply safety gates** — for active spills, fumes, exposure, fire, damaged/leaking batteries, unknown reactive materials, or urgent biohazards, prioritize keeping away and contacting the official campus emergency/EHS channel. Display a phone number only if verified in supplied official data; otherwise say it is unavailable and direct the user to the institution's official emergency/EHS contact source or local emergency services as appropriate.
-8. **Support evaluation planning** — define representative test cases for routine waste, unsupported questions, and hazardous/emergency scenarios. The proposal's benchmark is 15 cases: 8 routine, 4 unsupported, and 3 emergency/hazard cases.
+```bash
+cp .env.example .env          # then put the group key in BAILIAN_API_KEY
+python tools/proxy.py         # serves the app + proxies model calls
+# open http://127.0.0.1:8787  → endpoint "Local proxy"
+```
 
-## 3. Installation and setup
+**Browser-only, no install**: the hosted GitHub Pages site works too, but only for the safety gates and refusals — those need no model. AI answers from a hosted page are impossible with the AILT9019 course key: it is only valid on the Token Plan host, which sends no CORS headers, so browsers cannot call it (verified by test). For real answers, run `python tools/proxy.py` locally.
 
-This repository is a Skill definition, not an installable Python or Node package. There is no `pip install`, `npm install`, server command, or standalone app included.
+The API key lives in `sessionStorage` of the tab that typed it. It is never written to disk, the page, or the repository. **Never commit a key** — this repo is public and the course key is shared by the whole group. If a key leaks, ask the TA team to regenerate it.
 
-1. **Download or extract this project** so the `skills/recycling-rules-helper/` folder is available.
-2. **Use a compatible agent environment** that supports loading Skills. Add or import `skills/recycling-rules-helper/SKILL.md` according to that environment's instructions. The optional agent display metadata is in `skills/recycling-rules-helper/agents/openai.yaml`.
-3. **Prepare the policy corpus separately.** Obtain the institution's approved EHS and sustainability PDFs. Supply them to the agent or its document-retrieval system. Record document title, official source URL, version/date, last-updated date, and reliable PDF page mapping where possible.
-4. **Configure verified emergency contacts separately** if emergency contact information is needed. Use official institutional data only; do not make up or infer telephone numbers.
-5. **Check the environment's retrieval capabilities.** The Skill describes the retrieval behavior expected from the compatible agent. This project does not itself implement PDF ingestion, indexing, embeddings, search, or citation extraction, so those capabilities must be provided by the agent platform or a separate retrieval system.
+## Tests
 
-## 4. Usage
+```bash
+node tests/run_tests.mjs      # 26 checks, no API key needed (model call is stubbed)
+```
 
-After the Skill is loaded and the approved policy corpus is available:
+Covers retrieval quality on real corpus queries, the emergency/out-of-scope lexicons, citation-ID validation (fabricated IDs are dropped, uncited answers degrade to *not found*), and the full pipeline against a stubbed model.
 
-1. Ask a natural-language question about a specific waste item.
-2. Include relevant details such as whether a battery is damaged, whether a container is empty, or whether a chemical is leaking.
-3. Review the recommended steps, collection point, and source citations.
-4. Verify the cited clause and PDF page in the original policy before acting, especially for hazardous or ambiguous waste.
-5. If the documents do not establish a safe procedure or location, treat the answer as unverified and contact campus EHS/sustainability.
+Deep-linkable questions for manual checks: `/?q=A%20chemical%20bottle%20is%20leaking%20in%20my%20lab`
 
-The Skill's expected response format for a supported routine query is:
-- **Recommended route:** short numbered steps, each supported by an inline policy citation.
-- **Collection point:** exact documented location and access conditions, or a clear statement that the retrieved documents do not specify one.
-- **Source evidence:** policy title, clause, PDF page, short exact excerpt, and official URL/version information when available.
-- **Currency note:** available version/last-updated information, or a disclosure that currency could not be verified.
+## Known limitations
 
-## 5. Input/output examples
+- **Corpus is one document** (HKU *Chemical Waste v3*, 2012, review date passed — flagged in the UI). Battery and e-waste questions currently refuse, because the corpus genuinely has nothing on them. Adding documents is a manifest entry plus `python tools/build_index.py`.
+- Appendix tables extract imperfectly; pages with figures only (12, 16–18, 24, 26) have no chunks.
+- Clause detection is heuristic (numbered lines must read like headings/sentences, not table rows). It is tuned for this document family and may need adjustment for new ones.
+- Uploaded PDFs are split into page-level passages and become citable, but a PDF gives no clause numbers — their citations read `§ p.7`, not `§ 1.2.1`.
 
-The outputs below illustrate the **expected behavior**. They are not results from a live campus-policy database. No campus policy PDFs or verified emergency contact dataset are included in this repository, so a real collection location cannot be supplied from this project alone.
+## Repository layout
 
-### Example A — Laboratory electronic waste
-
-**Input**
-
-> Where should I take outdated laboratory electronic equipment for disposal?
-
-**Expected output when the supplied policy corpus supports the answer**
-
-> **Recommended route**
-> 1. Follow the preparation and transfer steps stated in the relevant campus policy. [Policy title, § clause, PDF p. N]
->
-> **Collection point:** The exact location and any access requirements stated by the policy.
->
-> **Source evidence:** [Policy title, version/date if available, § clause, PDF p. N] — “Short exact excerpt from the source.”
->
-> **Currency note:** State the recorded version/date, or explain that currency could not be verified.
-
-**Expected output when no supporting policy is available**
-
-> I couldn’t verify the laboratory e-waste disposal procedure or collection point in the campus policy documents available to me. I won’t guess. Please confirm with campus EHS/sustainability.
-
-### Example B — Battery disposal
-
-**Input**
-
-> How do I dispose of a used lithium-ion battery that is intact?
-
-**Expected output when supported**
-
-A concise sequence of source-supported handling and transfer steps, the named collection point, and exact policy clause/PDF-page citations. Do not invent preparation requirements or a collection location if the policy does not specify them.
-
-### Example C — Active chemical leak
-
-**Input**
-
-> A chemical bottle is leaking in the laboratory. Where should I take it for disposal?
-
-**Expected output**
-
-> **Safety first:** Do not handle or transport the leaking container. Keep away and contact the institution's official emergency/EHS response channel immediately. Use only verified contact information from the supplied official campus data. If no verified contact is available in the corpus, say so and direct the user to the institution's official emergency/EHS contact source or local emergency services as appropriate.
-
-The Skill must not give routine disposal instructions for an active hazard or claim that it has contacted responders.
-
-### Example D — Unsupported municipal question
-
-**Input**
-
-> What are the city rules for recycling a television at home?
-
-**Expected output**
-
-> The campus policy documents available to me do not establish the municipal recycling rule. I can only answer from the configured campus-policy corpus; please check the relevant municipal authority.
-
-## Testing and known limitations
-
-The project proposal defines a 15-case evaluation target:
-
-- **8 routine queries:** at least 80% procedure accuracy, with 100% clause/page citation accuracy.
-- **4 unsupported queries:** 100% safe rejection when the corpus does not support the answer.
-- **3 emergency/hazard queries:** 100% safety interception and use of verified emergency contact information where configured.
-
-These are target acceptance criteria, **not a claim that the full benchmark has already been run or passed**. Before deployment, test the Skill against the actual institution's corpus and manually verify every citation and safety response.
+```
+app/                  the PWA (index.html, app.js, retrieve.js, ai.js, render.js, corpus/)
+skills/               the agent-skill definition of the same workflow (SKILL.md)
+tools/                corpus manifest, index builder, fetcher, local CORS proxy, live model check
+tests/                headless pipeline tests
+.github/workflows/    Pages deployment with static validation
+```
