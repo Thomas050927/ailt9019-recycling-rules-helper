@@ -254,13 +254,18 @@ let contacts = null;
 let inFlight = null;
 
 const ENDPOINT_NOTES = {
-  "https://dashscope.aliyuncs.com/compatible-mode/v1":
-    "This host answers cross-origin requests, so the browser can call it directly.",
-  "https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1":
-    "The Token Plan host sends no CORS headers, so a browser call will be blocked. Run python tools/proxy.py and use the local proxy endpoint instead.",
   "http://127.0.0.1:8787/v1":
-    "Start it with: python tools/proxy.py — it serves this app and forwards model calls, keeping the key out of the browser.",
+    "Recommended. The proxy holds the key from .env and forwards the call, so nothing is typed in this tab. Start it with: python tools/proxy.py",
+  "https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1":
+    "This host sends no CORS headers, so a browser call is blocked. The course key is only valid here — use the local proxy instead.",
+  "https://dashscope.aliyuncs.com/compatible-mode/v1":
+    "Accepts browser calls, but tested against the AILT9019 course key it returns invalid_api_key. Only use this with a real DashScope key.",
 };
+
+/** The local proxy injects the key server-side, so this tab needs none. */
+function isLocalProxy(endpoint) {
+  return /^https?:\/\/(127\.0\.0\.1|localhost)[:/]/.test(String(endpoint || ""));
+}
 
 function readConfig() {
   return {
@@ -276,9 +281,10 @@ function persistConfig() {
   } catch {
     /* private mode: the key simply is not remembered */
   }
-  const { apiKey, model } = readConfig();
-  configState.textContent = apiKey ? `ready · ${model}` : "no key";
-  configState.classList.toggle("config-ready", Boolean(apiKey));
+  const { apiKey, model, endpoint } = readConfig();
+  const viaProxy = isLocalProxy(endpoint);
+  configState.textContent = apiKey ? `ready · ${model}` : viaProxy ? `proxy · ${model}` : "no key";
+  configState.classList.toggle("config-ready", Boolean(apiKey) || viaProxy);
 }
 
 function restoreConfig() {
@@ -305,7 +311,9 @@ async function loadCorpus() {
     renderDocuments();
     statusEl.textContent = `${corpusDocuments.length} policy document(s), ${corpusChunks.length} clauses indexed · built ${corpus.corpusVersion || "unknown"}.`;
     askStatus.textContent = `${searchIndex.size} clauses loaded.`;
-    if (!apiKeyEl.value.trim()) askStatus.textContent += " Add an API key in Model settings to get answers.";
+    if (!apiKeyEl.value.trim() && !isLocalProxy(endpointEl.value)) {
+      askStatus.textContent += " Add an API key in Model settings to get answers.";
+    }
   } catch {
     statusEl.textContent = "Corpus index could not load. You can still drop a PDF below.";
     askStatus.textContent = "Corpus index could not load, so answers are unavailable.";
@@ -345,8 +353,9 @@ async function submitQuestion(query) {
   const emergency = detectEmergency(query);
   const refusedEarly = detectOutOfScope(query) || !hits.length || coverage < MIN_COVERAGE;
 
-  if (!emergency && !refusedEarly && !config.apiKey) {
-    askStatus.textContent = "This question needs the model. Add an API key in Model settings, or run tools/proxy.py locally.";
+  const needsKey = !config.apiKey && !isLocalProxy(config.endpoint);
+  if (!emergency && !refusedEarly && needsKey) {
+    askStatus.textContent = "This question needs the model. Start python tools/proxy.py and pick the local proxy endpoint, or add a key in Model settings.";
     askStatus.classList.add("error");
     if (modelConfig) modelConfig.open = true;
     return;

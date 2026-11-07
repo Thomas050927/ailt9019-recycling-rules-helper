@@ -84,18 +84,41 @@ export function refusalAnswer({ reason, terms = [] }) {
 
 export function buildContext(hits, documents) {
   const byId = new Map((documents || []).map((doc) => [doc.id, doc]));
-  return hits
-    .map((hit, index) => {
-      const doc = byId.get(hit.doc) || {};
-      const label = `C${index + 1}`;
-      const title = doc.shortTitle || doc.title || hit.docShort || hit.doc;
-      return [
-        `[${label}] ${title} — § ${hit.clause} — PDF p.${hit.page}${hit.pageEnd !== hit.page ? `-${hit.pageEnd}` : ""}`,
-        `Section: ${hit.section}`,
-        `Text: ${hit.text}`,
-      ].join("\n");
-    })
-    .join("\n\n");
+
+  // The model cannot judge whether a policy is current if it never sees the
+  // version and dates, and the proposal requires the answer to state them.
+  const usedDocs = [...new Set(hits.map((hit) => hit.doc))]
+    .map((id) => byId.get(id))
+    .filter(Boolean);
+  const header = usedDocs.length
+    ? `Documents these passages come from:\n${usedDocs
+        .map((doc) => {
+          const parts = [doc.title || doc.id];
+          if (doc.version) parts.push(`version ${doc.version}`);
+          if (doc.issueDate) parts.push(`issued ${doc.issueDate}`);
+          if (doc.reviewDate) parts.push(`review date ${doc.reviewDate}`);
+          let line = `- ${parts.join(", ")}`;
+          if (doc.staleWarning) line += `\n  Publisher note: ${doc.staleWarning}`;
+          return line;
+        })
+        .join("\n")}\n\n`
+    : "";
+
+  return (
+    header +
+    hits
+      .map((hit, index) => {
+        const doc = byId.get(hit.doc) || {};
+        const label = `C${index + 1}`;
+        const title = doc.shortTitle || doc.title || hit.docShort || hit.doc;
+        return [
+          `[${label}] ${title} — § ${hit.clause} — PDF p.${hit.page}${hit.pageEnd !== hit.page ? `-${hit.pageEnd}` : ""}`,
+          `Section: ${hit.section}`,
+          `Text: ${hit.text}`,
+        ].join("\n");
+      })
+      .join("\n\n")
+  );
 }
 
 const SYSTEM_PROMPT = `You answer campus waste-disposal questions using ONLY the numbered context passages supplied by the user.
@@ -107,6 +130,7 @@ Hard rules:
 - If the passages do not establish the answer, set status to "not_found". Do not guess, and do not fall back on municipal or general recycling rules.
 - If the passages conflict, set status to "conflict", cite both, and explain the conflict instead of choosing one.
 - Keep the summary in plain language. Quote at most one short phrase per step.
+- The \`currency\` field must repeat the document version and its issue and review dates exactly as listed in the "Documents these passages come from" block. If a review date has passed, say the policy may be out of date. Never write that the date is unknown when the block gives one.
 
 Reply with a single JSON object and nothing else:
 {

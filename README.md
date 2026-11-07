@@ -45,7 +45,7 @@ python tools/proxy.py         # serves the app + proxies model calls
 # open http://127.0.0.1:8787  → endpoint "Local proxy"
 ```
 
-**Browser-only, no install**: the deployed GitHub Pages site works too — paste a key into *Model settings* and pick the DashScope endpoint (it allows browser calls). The Token Plan endpoint does not send CORS headers, so from a hosted page it only works through the local proxy.
+**Browser-only, no install**: the hosted GitHub Pages site works too, but only for the safety gates and refusals — those need no model. AI answers from a hosted page are impossible with the AILT9019 course key: it is only valid on the Token Plan host, which sends no CORS headers, so browsers cannot call it (verified by test). For real answers, run `python tools/proxy.py` locally.
 
 The API key lives in `sessionStorage` of the tab that typed it. It is never written to disk, the page, or the repository. **Never commit a key** — this repo is public and the course key is shared by the whole group. If a key leaks, ask the TA team to regenerate it.
 
@@ -71,7 +71,7 @@ Deep-linkable questions for manual checks: `/?q=A%20chemical%20bottle%20is%20lea
 ```
 app/                  the PWA (index.html, app.js, retrieve.js, ai.js, render.js, corpus/)
 skills/               the agent-skill definition of the same workflow (SKILL.md)
-tools/                corpus manifest, index builder, fetcher, local CORS proxy
+tools/                corpus manifest, index builder, fetcher, local CORS proxy, live model check
 tests/                headless pipeline tests
 .github/workflows/    Pages deployment with static validation
 ```

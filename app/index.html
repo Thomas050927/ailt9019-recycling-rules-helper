@@ -47,9 +47,9 @@
           <label class="field">
             <span>Endpoint</span>
             <select id="endpoint">
-              <option value="https://dashscope.aliyuncs.com/compatible-mode/v1">Aliyun DashScope (browser-direct)</option>
-              <option value="https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1">Bailian Token Plan (needs local proxy)</option>
               <option value="http://127.0.0.1:8787/v1">Local proxy — python tools/proxy.py</option>
+              <option value="https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1">Bailian Token Plan (browser calls blocked)</option>
+              <option value="https://dashscope.aliyuncs.com/compatible-mode/v1">Aliyun DashScope (needs a DashScope key)</option>
             </select>
           </label>
           <label class="field">
@@ -69,8 +69,9 @@
           </label>
         </div>
         <p class="config-note">
-          The key stays in this browser tab only — it is never written to the page, to a file, or to the repository.
-          Do not commit a key: this repository is public and the course key is shared by the whole group.
+          The course key is only valid on the Token Plan host, and that host blocks browser calls — so the working
+          setup is the local proxy, which keeps the key in <code>.env</code> and out of this page entirely.
+          If you paste a key here it stays in this tab only; it is never written to a file or the repository.
         </p>
         <p class="config-note" id="endpoint-note"></p>
       </details>

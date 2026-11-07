@@ -26,11 +26,11 @@ or any static server (`python -m http.server 8000` in this folder).
 
 Open *Model settings* under the Ask panel. Three endpoints:
 
-| Endpoint | Use when |
+| Endpoint | Reality (tested with the AILT9019 course key) |
 |---|---|
-| Aliyun DashScope | key works on `dashscope.aliyuncs.com` — browser-direct, CORS is open |
-| Bailian Token Plan | **blocked from a browser** (no CORS headers) — use the local proxy |
-| Local proxy | `python tools/proxy.py` with `BAILIAN_API_KEY` in `.env` |
+| Local proxy | **works** — `python tools/proxy.py` with `BAILIAN_API_KEY` in `.env`; the proxy injects the key, so none is typed in the browser |
+| Bailian Token Plan | accepts the course key but sends no CORS headers, so a browser call is blocked |
+| Aliyun DashScope | accepts browser calls but **rejects the course key** (`invalid_api_key`) — only useful with a real DashScope key |
 
 The key is kept in `sessionStorage` for the tab only. Nothing is persisted to disk or sent anywhere except the model endpoint you selected.
 
