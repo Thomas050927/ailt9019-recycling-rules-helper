@@ -47,10 +47,15 @@
           <label class="field">
             <span>Endpoint</span>
             <select id="endpoint">
+              <option value="https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1">Bailian Token Plan (direct)</option>
               <option value="http://127.0.0.1:8787/v1">Local proxy — python tools/proxy.py</option>
-              <option value="https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1">Bailian Token Plan (browser calls blocked)</option>
               <option value="https://dashscope.aliyuncs.com/compatible-mode/v1">Aliyun DashScope (needs a DashScope key)</option>
+              <option value="__custom">Custom relay URL…</option>
             </select>
+          </label>
+          <label class="field" id="custom-endpoint-field" hidden>
+            <span>Relay URL</span>
+            <input id="endpoint-custom" placeholder="https://your-worker.workers.dev/v1" autocomplete="off" spellcheck="false">
           </label>
           <label class="field">
             <span>Model</span>
@@ -69,9 +74,10 @@
           </label>
         </div>
         <p class="config-note">
-          The course key is only valid on the Token Plan host, and that host blocks browser calls — so the working
-          setup is the local proxy, which keeps the key in <code>.env</code> and out of this page entirely.
-          If you paste a key here it stays in this tab only; it is never written to a file or the repository.
+          Leave this alone if you started the tool with <code>start.py</code> — the local proxy already holds the key.
+          On a shared or hosted copy, pick <strong>Custom relay URL</strong> and paste the group's relay address, then
+          paste the key: the relay forwards it without storing it, and the key stays in this tab only.
+          It is never written to a file or to the repository.
         </p>
         <p class="config-note" id="endpoint-note"></p>
       </details>

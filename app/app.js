@@ -243,6 +243,8 @@ const askButton = document.querySelector("#ask-button");
 const askStatus = document.querySelector("#ask-status");
 const answerEl = document.querySelector("#answer");
 const endpointEl = document.querySelector("#endpoint");
+const endpointCustomEl = document.querySelector("#endpoint-custom");
+const endpointCustomField = document.querySelector("#custom-endpoint-field");
 const modelEl = document.querySelector("#model");
 const apiKeyEl = document.querySelector("#api-key");
 const configState = document.querySelector("#config-state");
@@ -250,16 +252,24 @@ const endpointNote = document.querySelector("#endpoint-note");
 const modelConfig = document.querySelector("#model-config");
 
 const CONFIG_KEY = "crh:model-config";
+
+// Paste the deployed relay URL here (ending in /v1) once relay/worker.js is up.
+// Everyone who opens the hosted page then starts with a working endpoint and
+// only has to paste a key. Leave empty while no relay exists.
+const DEFAULT_RELAY = "";
+
 let contacts = null;
 let inFlight = null;
 
 const ENDPOINT_NOTES = {
-  "http://127.0.0.1:8787/v1":
-    "Recommended. The proxy holds the key from .env and forwards the call, so nothing is typed in this tab. Start it with: python tools/proxy.py",
   "https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1":
-    "This host sends no CORS headers, so a browser call is blocked. The course key is only valid here — use the local proxy instead.",
+    "The key is valid here, but this host answers no CORS preflight, so a browser call is blocked. Use a relay URL or the local proxy.",
+  "http://127.0.0.1:8787/v1":
+    "Started by start.py. The proxy holds the key from .env, so nothing needs typing in this tab.",
   "https://dashscope.aliyuncs.com/compatible-mode/v1":
     "Accepts browser calls, but tested against the AILT9019 course key it returns invalid_api_key. Only use this with a real DashScope key.",
+  __custom:
+    "Your own relay (relay/worker.js on Cloudflare). It adds the CORS headers the Token Plan host omits and forwards your key without storing it.",
 };
 
 /** The local proxy injects the key server-side, so this tab needs none. */
@@ -267,9 +277,20 @@ function isLocalProxy(endpoint) {
   return /^https?:\/\/(127\.0\.0\.1|localhost)[:/]/.test(String(endpoint || ""));
 }
 
+function resolveEndpoint() {
+  const chosen = endpointEl.value || "";
+  if (chosen !== "__custom") return chosen;
+  return (endpointCustomEl?.value || "").trim();
+}
+
+function syncCustomField() {
+  if (endpointCustomField) endpointCustomField.hidden = endpointEl.value !== "__custom";
+  endpointNote.textContent = ENDPOINT_NOTES[endpointEl.value] || "";
+}
+
 function readConfig() {
   return {
-    endpoint: endpointEl.value || "",
+    endpoint: resolveEndpoint(),
     model: modelEl.value.trim() || "qwen3.8-flash",
     apiKey: apiKeyEl.value.trim(),
   };
@@ -290,14 +311,28 @@ function persistConfig() {
 function restoreConfig() {
   try {
     const saved = JSON.parse(sessionStorage.getItem(CONFIG_KEY) || "{}");
-    if (saved.endpoint) endpointEl.value = saved.endpoint;
+    if (saved.endpoint) {
+      const known = [...endpointEl.options].some((option) => option.value === saved.endpoint);
+      if (known) {
+        endpointEl.value = saved.endpoint;
+      } else {
+        endpointEl.value = "__custom";
+        if (endpointCustomEl) endpointCustomEl.value = saved.endpoint;
+      }
+    } else if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) {
+      // Served by start.py, so the proxy is already there.
+      endpointEl.value = "http://127.0.0.1:8787/v1";
+    } else if (DEFAULT_RELAY) {
+      endpointEl.value = "__custom";
+      if (endpointCustomEl) endpointCustomEl.value = DEFAULT_RELAY;
+    }
     if (saved.model) modelEl.value = saved.model;
     if (saved.apiKey) apiKeyEl.value = saved.apiKey;
   } catch {
     /* ignore a corrupt entry */
   }
+  syncCustomField();
   persistConfig();
-  endpointNote.textContent = ENDPOINT_NOTES[endpointEl.value] || "";
 }
 
 async function loadCorpus() {
@@ -311,7 +346,7 @@ async function loadCorpus() {
     renderDocuments();
     statusEl.textContent = `${corpusDocuments.length} policy document(s), ${corpusChunks.length} clauses indexed · built ${corpus.corpusVersion || "unknown"}.`;
     askStatus.textContent = `${searchIndex.size} clauses loaded.`;
-    if (!apiKeyEl.value.trim() && !isLocalProxy(endpointEl.value)) {
+    if (!apiKeyEl.value.trim() && !isLocalProxy(resolveEndpoint())) {
       askStatus.textContent += " Add an API key in Model settings to get answers.";
     }
   } catch {
@@ -355,7 +390,7 @@ async function submitQuestion(query) {
 
   const needsKey = !config.apiKey && !isLocalProxy(config.endpoint);
   if (!emergency && !refusedEarly && needsKey) {
-    askStatus.textContent = "This question needs the model. Start python tools/proxy.py and pick the local proxy endpoint, or add a key in Model settings.";
+    askStatus.textContent = "This question needs the model. Paste the API key in Model settings, or run start.py to use the local proxy.";
     askStatus.classList.add("error");
     if (modelConfig) modelConfig.open = true;
     return;
@@ -412,10 +447,17 @@ document.querySelectorAll("[data-ask]").forEach((button) =>
 
 [endpointEl, modelEl, apiKeyEl].forEach((input) => {
   input.addEventListener("change", () => {
+    syncCustomField();
     persistConfig();
-    endpointNote.textContent = ENDPOINT_NOTES[endpointEl.value] || "";
   });
 });
+
+if (endpointCustomEl) {
+  endpointCustomEl.addEventListener("input", () => {
+    syncCustomField();
+    persistConfig();
+  });
+}
 
 restoreConfig();
 await loadContacts();
