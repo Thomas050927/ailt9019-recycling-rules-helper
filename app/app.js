@@ -336,7 +336,10 @@ function persistConfig() {
 function restoreConfig() {
   try {
     const saved = JSON.parse(sessionStorage.getItem(CONFIG_KEY) || "{}");
-    if (saved.endpoint) {
+    // A preconfigured build always starts from its baked settings: a leftover
+    // entry in this tab must never make the tool look unconfigured.
+    const baked = Boolean(EMBEDDED_DEFAULTS.apiKey || EMBEDDED_DEFAULTS.endpoint);
+    if (saved.endpoint && !baked) {
       const known = [...endpointEl.options].some((option) => option.value === saved.endpoint);
       if (known) {
         endpointEl.value = saved.endpoint;
@@ -344,19 +347,22 @@ function restoreConfig() {
         endpointEl.value = "__custom";
         if (endpointCustomEl) endpointCustomEl.value = saved.endpoint;
       }
+    } else if (EMBEDDED_DEFAULTS.endpoint) {
+      // A build that came with its own endpoint (relay) wins over the
+      // localhost guess: the preview panel and any local web server also
+      // serve from 127.0.0.1 without a proxy behind them.
+      endpointEl.value = "__custom";
+      if (endpointCustomEl) endpointCustomEl.value = EMBEDDED_DEFAULTS.endpoint;
     } else if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) {
       // Served by start.py, so the proxy is already there.
       endpointEl.value = "http://127.0.0.1:8787/v1";
-    } else if (EMBEDDED_DEFAULTS.endpoint) {
-      endpointEl.value = "__custom";
-      if (endpointCustomEl) endpointCustomEl.value = EMBEDDED_DEFAULTS.endpoint;
     } else if (DEFAULT_RELAY) {
       endpointEl.value = "__custom";
       if (endpointCustomEl) endpointCustomEl.value = DEFAULT_RELAY;
     }
-    if (saved.model) modelEl.value = saved.model;
+    if (saved.model && !baked) modelEl.value = saved.model;
     else if (EMBEDDED_DEFAULTS.model) modelEl.value = EMBEDDED_DEFAULTS.model;
-    if (saved.apiKey) apiKeyEl.value = saved.apiKey;
+    if (saved.apiKey && !baked) apiKeyEl.value = saved.apiKey;
     else if (EMBEDDED_DEFAULTS.apiKey) apiKeyEl.value = EMBEDDED_DEFAULTS.apiKey;
   } catch {
     /* ignore a corrupt entry */
