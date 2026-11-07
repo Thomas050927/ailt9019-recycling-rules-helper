@@ -155,3 +155,68 @@ export function renderAnswer(container, result) {
 
   container.append(card);
 }
+
+/**
+ * Used when no model key is configured: show the clauses retrieval found instead
+ * of a dead end. Nothing here is generated — every line comes from the index, so
+ * the references are real and can be checked against the PDF.
+ */
+export function renderClauses(container, { hits, docs = [], query }) {
+  container.replaceChildren();
+  if (!hits || !hits.length) return;
+
+  const byId = new Map(docs.map((doc) => [doc.id, doc]));
+  const card = el("article", "answer-card answer-clauses");
+  card.append(el("div", "answer-flag", "MATCHING POLICY CLAUSES"));
+  card.append(el("h3", "answer-headline", "Clauses that mention this"));
+  card.append(
+    el(
+      "p",
+      "answer-body",
+      "No model key is set on this copy, so this is not a written answer — it is the exact set of clauses the assistant would answer from. Every reference below is real."
+    )
+  );
+
+  const list = el("ul", "evidence-list");
+  for (const hit of hits.slice(0, 4)) {
+    const doc = byId.get(hit.doc) || {};
+    const item = el("li", "evidence-item");
+    const head = el("div", "evidence-head");
+    head.append(
+      el("span", "evidence-ref", `§ ${hit.clause} · PDF p.${hit.page}`),
+      el("span", "evidence-doc", doc.shortTitle || hit.docShort || hit.doc || "")
+    );
+    item.append(head);
+    item.append(el("p", "evidence-quote", hit.text.length > 320 ? `${hit.text.slice(0, 320)}…` : hit.text));
+    if (doc.sourceUrl) {
+      const link = el("a", "evidence-link", "Open official source ↗");
+      link.href = doc.sourceUrl;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      item.append(link);
+    }
+    list.append(item);
+  }
+  card.append(list);
+
+  const docsUsed = [...new Set(hits.slice(0, 4).map((hit) => byId.get(hit.doc)?.shortTitle || hit.doc))];
+  const version = docsUsed.length === 1 ? byId.get(hits[0].doc) : null;
+  if (version) {
+    card.append(
+      el(
+        "p",
+        "answer-currency",
+        `${version.shortTitle}, version ${version.version}, issued ${version.issueDate}, review date ${version.reviewDate}.`
+      )
+    );
+  }
+
+  card.append(
+    el(
+      "p",
+      "answer-note",
+      "To turn these clauses into a written answer, add a model key in Model settings, or run start.py locally."
+    )
+  );
+  container.append(card);
+}

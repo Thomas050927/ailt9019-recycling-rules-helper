@@ -1,6 +1,6 @@
 import { buildIndex, search } from "./retrieve.js";
-import { ask, detectEmergency, detectOutOfScope, MIN_COVERAGE } from "./ai.js";
-import { renderAnswer } from "./render.js";
+import { ask, detectEmergency, detectOutOfScope, emergencyAnswer, refusalAnswer, MIN_COVERAGE } from "./ai.js";
+import { renderAnswer, renderClauses } from "./render.js";
 
 /**
  * One question in, one cited answer out.
@@ -188,9 +188,7 @@ dropZone.addEventListener("drop", async (event) => {
 async function loadOfficialLinks() {
   if (!officialLinks) return;
   try {
-    const response = await fetch("./hku-sources.json", { cache: "no-cache" });
-    if (!response.ok) throw new Error("catalogue unavailable");
-    const catalogue = await response.json();
+    const catalogue = await loadJSON("./hku-sources.json", "sources");
     const sources = Array.isArray(catalogue.sources) ? catalogue.sources : [];
     officialLinks.replaceChildren();
     for (const source of sources) {
@@ -252,6 +250,18 @@ const endpointNote = document.querySelector("#endpoint-note");
 const modelConfig = document.querySelector("#model-config");
 
 const CONFIG_KEY = "crh:model-config";
+
+// The single-file build (tools/build_single_file.py) inlines the JSON payloads
+// here so the page also works when opened straight from disk via file://,
+// where fetch() of a sibling file is blocked by the browser.
+const EMBEDDED = globalThis.__CRH_DATA__ || null;
+
+async function loadJSON(path, key) {
+  if (EMBEDDED && EMBEDDED[key]) return EMBEDDED[key];
+  const response = await fetch(path, { cache: "no-cache" });
+  if (!response.ok) throw new Error(`missing ${path}`);
+  return response.json();
+}
 
 // Paste the deployed relay URL here (ending in /v1) once relay/worker.js is up.
 // Everyone who opens the hosted page then starts with a working endpoint and
@@ -337,9 +347,7 @@ function restoreConfig() {
 
 async function loadCorpus() {
   try {
-    const response = await fetch("./corpus/index.json", { cache: "no-cache" });
-    if (!response.ok) throw new Error("corpus index not found");
-    const corpus = await response.json();
+    const corpus = await loadJSON("./corpus/index.json", "corpus");
     corpusDocuments = corpus.documents || [];
     corpusChunks = corpus.chunks || [];
     rebuildIndex();
@@ -347,7 +355,7 @@ async function loadCorpus() {
     statusEl.textContent = `${corpusDocuments.length} policy document(s), ${corpusChunks.length} clauses indexed · built ${corpus.corpusVersion || "unknown"}.`;
     askStatus.textContent = `${searchIndex.size} clauses loaded.`;
     if (!apiKeyEl.value.trim() && !isLocalProxy(resolveEndpoint())) {
-      askStatus.textContent += " Add an API key in Model settings to get answers.";
+      askStatus.textContent += " Without a key you'll see the matching clauses, not a written answer.";
     }
   } catch {
     statusEl.textContent = "Corpus index could not load. You can still drop a PDF below.";
@@ -358,8 +366,7 @@ async function loadCorpus() {
 
 async function loadContacts() {
   try {
-    const response = await fetch("./contacts.json", { cache: "no-cache" });
-    if (response.ok) contacts = await response.json();
+    contacts = await loadJSON("./contacts.json", "contacts");
   } catch {
     contacts = null;
   }
@@ -389,9 +396,29 @@ async function submitQuestion(query) {
   const refusedEarly = detectOutOfScope(query) || !hits.length || coverage < MIN_COVERAGE;
 
   const needsKey = !config.apiKey && !isLocalProxy(config.endpoint);
-  if (!emergency && !refusedEarly && needsKey) {
-    askStatus.textContent = "This question needs the model. Paste the API key in Model settings, or run start.py to use the local proxy.";
-    askStatus.classList.add("error");
+  if (needsKey) {
+    // No model available: still show what retrieval found, with real references,
+    // rather than an error. The safety gates keep priority and stay identical.
+    if (emergency) {
+      renderAnswer(answerEl, { kind: "emergency", answer: emergencyAnswer(contacts) });
+      askStatus.textContent = "Safety gate triggered — no disposal steps were generated.";
+      return;
+    }
+    if (refusedEarly) {
+      renderAnswer(answerEl, {
+        kind: "refused",
+        answer: refusalAnswer({
+          reason: detectOutOfScope(query)
+            ? "This question is outside the campus policy corpus."
+            : `No strong match in the corpus (best coverage ${(coverage * 100).toFixed(0)}%).`,
+          terms,
+        }),
+      });
+      askStatus.textContent = "Refused: the corpus does not support an answer.";
+      return;
+    }
+    renderClauses(answerEl, { hits, docs: allDocuments(), query });
+    askStatus.textContent = `${hits.length} matching clause(s) shown. Add a key in Model settings for a written answer.`;
     if (modelConfig) modelConfig.open = true;
     return;
   }

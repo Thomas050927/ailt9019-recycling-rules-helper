@@ -56,3 +56,8 @@
 .reference-block>summary::before{content:"▸ ";color:var(--green)}
 .reference-block[open]>summary::before{content:"▾ "}
 .reference-block>.muted{font-size:.86rem;margin:10px 0 6px}
+
+/* Clause-list fallback: deliberately distinct from a generated answer. */
+.answer-clauses{border-left-color:#6b7f92;background:#fbfcfd}
+.answer-clauses .answer-flag{color:#4a5d6f}
+.answer-clauses .evidence-quote{font-style:normal;color:#3c4650}

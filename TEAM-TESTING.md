@@ -1,11 +1,46 @@
 # Testing the AI tool on your own laptop
 
-For Group 60. About two minutes. No terminal needed, no `pip install`.
-You only need Python.
+For Group 60. Pick whichever route sounds easiest:
+
+- **Route A — one file, no install (2 minutes).** Double-click a single
+  `.html` file. You see the safety gates and the exact policy clauses with
+  citations, but not written AI answers.
+- **Route B — full AI answers (~5 minutes).** Install Python and run
+  `start.py`. Written answers with clause citations.
+
+You only need Route A to try it. Route B is what the graded demo uses.
 
 ---
 
-## Step 1 — Download the code
+## Route A — one file, nothing to install
+
+1. Open this page and click **Download raw file** (top-right of the file view):
+
+   **https://github.com/Thomas050927/ailt9019-recycling-rules-helper/blob/feat/ai-answer-layer/waste-guide.html**
+
+2. Double-click the downloaded `waste-guide.html`. It opens in your browser.
+
+Everything works offline — the whole rulebook is inside the file.
+
+What you get without any key:
+
+| Ask this | What you see |
+|---|---|
+| `A chemical bottle is leaking in my lab` | **Red** card: "Stop. Do not handle or move it." Phone **3917 2882**. No steps. |
+| `What are the city rules for recycling a television at home` | **Amber** card refusing — the campus documents don't cover it |
+| `How should chemical waste be segregated?` | The exact clauses the assistant would answer from: `§ 1.2.1 · PDF p.3`, with excerpts and links to the official PDF |
+
+The last one is labelled **MATCHING POLICY CLAUSES** on purpose — it is a
+retrieval result, not a written answer. Written answers need a model key.
+
+## Route B — full AI answers
+
+Continue from Step 1 below. The single file stays useful as a demo that
+anyone can open anywhere, even with no internet.
+
+---
+
+## Step 1 — Get the code
 
 The AI work lives on a branch called `feat/ai-answer-layer`, not on `main`.
 Download that branch as a zip — no Git, no GitHub account:
