@@ -268,10 +268,9 @@ async function loadJSON(path, key) {
   return response.json();
 }
 
-// Paste the deployed relay URL here (ending in /v1) once relay/worker.js is up.
-// Everyone who opens the hosted page then starts with a working endpoint and
-// only has to paste a key. Leave empty while no relay exists.
-const DEFAULT_RELAY = "";
+// Deployed Cloudflare relay (relay/worker.js). Everyone who opens the hosted
+// page starts with a working endpoint and only has to paste a key.
+const DEFAULT_RELAY = "https://waste-guide-relay.pongcyrus.workers.dev/v1";
 
 let contacts = null;
 let inFlight = null;
