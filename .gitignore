@@ -18,3 +18,6 @@ venv/
 Thumbs.db
 .idea/
 .vscode/
+
+# single-file builds that contain the course key
+waste-guide-key.html

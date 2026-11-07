@@ -255,6 +255,11 @@ const CONFIG_KEY = "crh:model-config";
 // here so the page also works when opened straight from disk via file://,
 // where fetch() of a sibling file is blocked by the browser.
 const EMBEDDED = globalThis.__CRH_DATA__ || null;
+// Optional defaults baked into a single-file build (key/relay/model), so a
+// teammate can open the file and ask questions with zero setup. Anything the
+// user types in the settings panel still wins, because sessionStorage is
+// checked first.
+const EMBEDDED_DEFAULTS = (EMBEDDED && EMBEDDED.defaults) || {};
 
 async function loadJSON(path, key) {
   if (EMBEDDED && EMBEDDED[key]) return EMBEDDED[key];
@@ -332,12 +337,17 @@ function restoreConfig() {
     } else if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) {
       // Served by start.py, so the proxy is already there.
       endpointEl.value = "http://127.0.0.1:8787/v1";
+    } else if (EMBEDDED_DEFAULTS.endpoint) {
+      endpointEl.value = "__custom";
+      if (endpointCustomEl) endpointCustomEl.value = EMBEDDED_DEFAULTS.endpoint;
     } else if (DEFAULT_RELAY) {
       endpointEl.value = "__custom";
       if (endpointCustomEl) endpointCustomEl.value = DEFAULT_RELAY;
     }
     if (saved.model) modelEl.value = saved.model;
+    else if (EMBEDDED_DEFAULTS.model) modelEl.value = EMBEDDED_DEFAULTS.model;
     if (saved.apiKey) apiKeyEl.value = saved.apiKey;
+    else if (EMBEDDED_DEFAULTS.apiKey) apiKeyEl.value = EMBEDDED_DEFAULTS.apiKey;
   } catch {
     /* ignore a corrupt entry */
   }

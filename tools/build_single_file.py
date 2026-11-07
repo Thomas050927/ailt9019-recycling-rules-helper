@@ -8,6 +8,12 @@ double-click on a machine with no Python, no server and no install.
 
 Usage:
     python tools/build_single_file.py [--out waste-guide.html]
+    python tools/build_single_file.py --embed-key --relay https://YOUR.workers.dev/v1
+
+The second form bakes the API key (read from .env) and a relay URL into the
+file, so a teammate can open it and ask questions with zero setup. That output
+contains a secret, so it defaults to waste-guide-key.html, which is git-ignored.
+Never commit a file built with --embed-key.
 """
 
 from __future__ import annotations
@@ -42,10 +48,40 @@ def read_json(relative: str) -> str:
     return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
 
 
+def read_env_key() -> str:
+    env_path = ROOT / ".env"
+    if not env_path.exists():
+        raise SystemExit("--embed-key needs a .env file with BAILIAN_API_KEY=...")
+    for line in env_path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("BAILIAN_API_KEY="):
+            return line.split("=", 1)[1].strip()
+    raise SystemExit("BAILIAN_API_KEY not found in .env")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--out", default="waste-guide.html")
+    parser.add_argument("--out", default=None)
+    parser.add_argument("--embed-key", action="store_true",
+                        help="bake the API key from .env into the file (output is git-ignored)")
+    parser.add_argument("--relay", default=None,
+                        help="bake this endpoint (e.g. a Cloudflare relay URL ending in /v1) into the file")
+    parser.add_argument("--model", default=None, help="bake this model name into the file")
     args = parser.parse_args()
+
+    defaults = {}
+    if args.embed_key:
+        defaults["apiKey"] = read_env_key()
+    if args.relay:
+        defaults["endpoint"] = args.relay
+    if args.model:
+        defaults["model"] = args.model
+
+    if args.out is None:
+        # Anything carrying secrets or a private relay must never be committed,
+        # so it gets a separate, git-ignored name.
+        args.out = "waste-guide-key.html" if defaults else "waste-guide.html"
+    if defaults and args.out == "waste-guide.html":
+        raise SystemExit("refusing to write secrets into the committed file; use --out waste-guide-key.html")
 
     html = (APP / "index.html").read_text(encoding="utf-8")
     css = (APP / "styles.css").read_text(encoding="utf-8")
@@ -67,7 +103,9 @@ def main() -> int:
         "(async function () {",
         f'window.__CRH_DATA__ = {{ corpus: {read_json("app/corpus/index.json")},',
         f'  contacts: {read_json("app/contacts.json")},',
-        f'  sources: {read_json("app/hku-sources.json")} }};',
+        f'  sources: {read_json("app/hku-sources.json")}',
+        f', defaults: {json.dumps(defaults, separators=(",", ":"))}' if defaults else "",
+        '};',
     ]
     for module in MODULES:
         source = (APP / module).read_text(encoding="utf-8")
@@ -97,6 +135,8 @@ def main() -> int:
     size_kb = out_path.stat().st_size / 1024
     print(f"wrote {out_path.relative_to(ROOT)} ({size_kb:.0f} KB)")
     print(f"  inlined: styles.css, {len(MODULES)} modules, 3 JSON payloads")
+    if defaults:
+        print(f"  baked-in defaults: {', '.join(sorted(defaults))} — do NOT commit this file")
     return 0
 
 
