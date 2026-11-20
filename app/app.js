@@ -268,20 +268,26 @@ async function loadJSON(path, key) {
   return response.json();
 }
 
-// Deployed Cloudflare relay (relay/worker.js). Everyone who opens the hosted
-// page starts with a working endpoint and only has to paste a key.
+// Deployed Cloudflare relay (relay/worker.js). It forwards the course's
+// sk-sp- keys to the Token Plan host, which answers no CORS preflight.
 const DEFAULT_RELAY = "https://waste-guide-relay.pongcyrus.workers.dev/v1";
+
+// A personal Bailian free-quota key (sk-…) uses the standard DashScope
+// compatible endpoint, which does answer CORS preflights — no relay needed.
+const ENDPOINT_TOKEN_PLAN = "https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1";
+const ENDPOINT_PERSONAL = "https://dashscope.aliyuncs.com/compatible-mode/v1";
+const PERSONAL_DEFAULT_MODEL = "qwen-plus";
 
 let contacts = null;
 let inFlight = null;
 
 const ENDPOINT_NOTES = {
-  "https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1":
-    "The key is valid here, but this host answers no CORS preflight, so a browser call is blocked. Use a relay URL or the local proxy.",
+  [ENDPOINT_TOKEN_PLAN]:
+    "The course's sk-sp- keys are valid here, but this host answers no CORS preflight, so a browser call is blocked. Use a relay URL or the local proxy.",
   "http://127.0.0.1:8787/v1":
     "Started by start.py. The proxy holds the key from .env, so nothing needs typing in this tab.",
-  "https://dashscope.aliyuncs.com/compatible-mode/v1":
-    "Accepts browser calls, but tested against the AILT9019 course key it returns invalid_api_key. Only use this with a real DashScope key.",
+  [ENDPOINT_PERSONAL]:
+    "For your own Bailian free-quota key (starts with sk-). Browser calls work here directly — no relay or proxy needed. Use a model code that still has free quota, e.g. qwen-plus.",
   __custom:
     "Your own relay (relay/worker.js on Cloudflare). It adds the CORS headers the Token Plan host omits and forwards your key without storing it.",
 };
@@ -302,7 +308,36 @@ function syncCustomField() {
   endpointNote.textContent = ENDPOINT_NOTES[endpointEl.value] || "";
   if (EMBEDDED_DEFAULTS.endpoint && resolveEndpoint() === EMBEDDED_DEFAULTS.endpoint) {
     endpointNote.textContent =
-      "This copy came with the key and relay already set up. You can ignore this whole panel — just close it and ask questions.";
+      "This copy came with the key and endpoint already set up. You can ignore this whole panel — just close it and ask questions.";
+  }
+}
+
+/**
+ * Course keys start with sk-sp- and need the relay; personal free-quota keys
+ * start with sk- and work directly against DashScope. Picking the right host
+ * from the key itself means a teammate only has to paste one thing.
+ */
+function applyKeyEndpointHint() {
+  const key = apiKeyEl.value.trim();
+  if (!key) return;
+  const current = resolveEndpoint();
+  let changed = false;
+
+  if (/^sk-(?!sp-)/.test(key) && (current === ENDPOINT_TOKEN_PLAN || current === DEFAULT_RELAY || !current)) {
+    endpointEl.value = ENDPOINT_PERSONAL;
+    if (/^qwen3\.|^deepseek-v4/.test(modelEl.value.trim()) || !modelEl.value.trim()) {
+      modelEl.value = PERSONAL_DEFAULT_MODEL;
+    }
+    changed = true;
+  } else if (/^sk-sp-/.test(key) && current === ENDPOINT_PERSONAL) {
+    endpointEl.value = "__custom";
+    if (endpointCustomEl) endpointCustomEl.value = DEFAULT_RELAY;
+    changed = true;
+  }
+
+  if (changed) {
+    syncCustomField();
+    persistConfig();
   }
 }
 
@@ -348,11 +383,16 @@ function restoreConfig() {
         if (endpointCustomEl) endpointCustomEl.value = saved.endpoint;
       }
     } else if (EMBEDDED_DEFAULTS.endpoint) {
-      // A build that came with its own endpoint (relay) wins over the
-      // localhost guess: the preview panel and any local web server also
-      // serve from 127.0.0.1 without a proxy behind them.
-      endpointEl.value = "__custom";
-      if (endpointCustomEl) endpointCustomEl.value = EMBEDDED_DEFAULTS.endpoint;
+      // A build that came with its own endpoint wins over the localhost guess.
+      // Prefer a real dropdown entry when the baked URL is one we ship, so the
+      // panel does not look like a mystery "Custom relay URL".
+      const known = [...endpointEl.options].some((option) => option.value === EMBEDDED_DEFAULTS.endpoint);
+      if (known) {
+        endpointEl.value = EMBEDDED_DEFAULTS.endpoint;
+      } else {
+        endpointEl.value = "__custom";
+        if (endpointCustomEl) endpointCustomEl.value = EMBEDDED_DEFAULTS.endpoint;
+      }
     } else if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) {
       // Served by start.py, so the proxy is already there.
       endpointEl.value = "http://127.0.0.1:8787/v1";
@@ -504,6 +544,9 @@ document.querySelectorAll("[data-ask]").forEach((button) =>
     persistConfig();
   });
 });
+
+// Run on every keystroke so pasting a key immediately picks the right host.
+apiKeyEl.addEventListener("input", applyKeyEndpointHint);
 
 if (endpointCustomEl) {
   endpointCustomEl.addEventListener("input", () => {

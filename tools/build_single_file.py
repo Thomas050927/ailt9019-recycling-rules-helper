@@ -8,12 +8,13 @@ double-click on a machine with no Python, no server and no install.
 
 Usage:
     python tools/build_single_file.py [--out waste-guide.html]
+    python tools/build_single_file.py --embed-key --endpoint https://dashscope.aliyuncs.com/compatible-mode/v1 --model qwen-plus
     python tools/build_single_file.py --embed-key --relay https://YOUR.workers.dev/v1
 
-The second form bakes the API key (read from .env) and a relay URL into the
-file, so a teammate can open it and ask questions with zero setup. That output
-contains a secret, so it defaults to waste-guide-key.html, which is git-ignored.
-Never commit a file built with --embed-key.
+The key-carrying forms bake the API key (read from .env) and an endpoint into
+the file, so a teammate can open it and ask questions with zero setup. That
+output contains a secret, so it defaults to waste-guide-key.html, which is
+git-ignored. Never commit a file built with --embed-key.
 """
 
 from __future__ import annotations
@@ -63,16 +64,19 @@ def main() -> int:
     parser.add_argument("--out", default=None)
     parser.add_argument("--embed-key", action="store_true",
                         help="bake the API key from .env into the file (output is git-ignored)")
+    parser.add_argument("--endpoint", default=None,
+                        help="bake this API base URL into the file (e.g. https://dashscope.aliyuncs.com/compatible-mode/v1)")
     parser.add_argument("--relay", default=None,
-                        help="bake this endpoint (e.g. a Cloudflare relay URL ending in /v1) into the file")
+                        help="older alias for --endpoint (a Cloudflare relay URL ending in /v1)")
     parser.add_argument("--model", default=None, help="bake this model name into the file")
     args = parser.parse_args()
 
     defaults = {}
     if args.embed_key:
         defaults["apiKey"] = read_env_key()
-    if args.relay:
-        defaults["endpoint"] = args.relay
+    endpoint = args.endpoint or args.relay
+    if endpoint:
+        defaults["endpoint"] = endpoint
     if args.model:
         defaults["model"] = args.model
 
@@ -133,7 +137,11 @@ def main() -> int:
     out_path = ROOT / args.out
     out_path.write_text(html, encoding="utf-8")
     size_kb = out_path.stat().st_size / 1024
-    print(f"wrote {out_path.relative_to(ROOT)} ({size_kb:.0f} KB)")
+    try:
+        shown = out_path.relative_to(ROOT)
+    except ValueError:
+        shown = out_path
+    print(f"wrote {shown} ({size_kb:.0f} KB)")
     print(f"  inlined: styles.css, {len(MODULES)} modules, 3 JSON payloads")
     if defaults:
         print(f"  baked-in defaults: {', '.join(sorted(defaults))} — do NOT commit this file")
